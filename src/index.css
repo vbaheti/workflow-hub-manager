@@ -1,83 +1,82 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
+/* Centralized Design System - All UI driven through these CSS custom properties */
 
 @layer base {
   :root {
+    /* Color System */
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
     --primary: 222.2 47.4% 11.2%;
     --primary-foreground: 210 40% 98%;
-
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-
     --radius: 0.5rem;
 
+    /* Sidebar Variables */
     --sidebar-background: 0 0% 98%;
-
     --sidebar-foreground: 240 5.3% 26.1%;
-
     --sidebar-primary: 240 5.9% 10%;
-
     --sidebar-primary-foreground: 0 0% 98%;
-
     --sidebar-accent: 240 4.8% 95.9%;
-
     --sidebar-accent-foreground: 240 5.9% 10%;
-
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Custom App Variables */
+    --app-header-height: 4rem;
+    --app-sidebar-width: 16rem;
+    --app-content-padding: 1.5rem;
+    --app-card-radius: 0.75rem;
+    --app-transition-speed: 0.2s;
+    
+    /* Status Colors */
+    --status-pending: 45 93% 47%;
+    --status-approved: 142 76% 36%;
+    --status-rejected: 0 84% 60%;
+    --status-draft: 215 16% 47%;
+    
+    /* Component Specific */
+    --dashboard-card-bg: var(--card);
+    --table-header-bg: var(--muted);
+    --form-input-bg: var(--background);
+    --button-primary-bg: var(--primary);
+    --button-secondary-bg: var(--secondary);
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 210 40% 98%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
@@ -99,5 +98,260 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Centralized Component Styles */
+@layer components {
+  /* Layout Components */
+  .app-layout {
+    @apply min-h-screen flex w-full;
+    background-color: hsl(var(--background));
+  }
+
+  .app-header {
+    @apply border-b bg-white px-6;
+    height: var(--app-header-height);
+    @apply flex items-center gap-4;
+  }
+
+  .app-main-content {
+    @apply flex-1;
+    padding: var(--app-content-padding);
+  }
+
+  /* Card Components */
+  .dashboard-card {
+    @apply rounded-lg border bg-card text-card-foreground shadow-sm;
+    border-radius: var(--app-card-radius);
+    background-color: hsl(var(--dashboard-card-bg));
+  }
+
+  .stats-card {
+    @apply dashboard-card p-6;
+  }
+
+  .stats-card-header {
+    @apply flex flex-row items-center justify-between space-y-0 pb-2;
+  }
+
+  .stats-card-title {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  .stats-card-value {
+    @apply text-2xl font-bold;
+  }
+
+  .stats-card-description {
+    @apply text-xs text-muted-foreground;
+  }
+
+  /* Status Badges */
+  .status-badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+    transition: all var(--app-transition-speed) ease-in-out;
+  }
+
+  .status-pending {
+    @apply status-badge;
+    background-color: hsl(var(--status-pending) / 0.1);
+    color: hsl(var(--status-pending));
+  }
+
+  .status-approved {
+    @apply status-badge;
+    background-color: hsl(var(--status-approved) / 0.1);
+    color: hsl(var(--status-approved));
+  }
+
+  .status-rejected {
+    @apply status-badge;
+    background-color: hsl(var(--status-rejected) / 0.1);
+    color: hsl(var(--status-rejected));
+  }
+
+  .status-draft {
+    @apply status-badge;
+    background-color: hsl(var(--status-draft) / 0.1);
+    color: hsl(var(--status-draft));
+  }
+
+  /* Form Components */
+  .form-group {
+    @apply space-y-2;
+  }
+
+  .form-label {
+    @apply text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70;
+  }
+
+  .form-input {
+    @apply flex h-10 w-full rounded-md border border-input px-3 py-2 text-sm ring-offset-background;
+    @apply file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:cursor-not-allowed disabled:opacity-50;
+    background-color: hsl(var(--form-input-bg));
+    transition: all var(--app-transition-speed) ease-in-out;
+  }
+
+  /* Button Components */
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background;
+    @apply transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+    @apply h-10 px-4 py-2;
+    background-color: hsl(var(--button-primary-bg));
+    color: hsl(var(--primary-foreground));
+  }
+
+  .btn-primary:hover {
+    background-color: hsl(var(--button-primary-bg) / 0.9);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background;
+    @apply transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    @apply disabled:pointer-events-none disabled:opacity-50;
+    @apply h-10 px-4 py-2;
+    background-color: hsl(var(--button-secondary-bg));
+    color: hsl(var(--secondary-foreground));
+  }
+
+  .btn-secondary:hover {
+    background-color: hsl(var(--button-secondary-bg) / 0.8);
+  }
+
+  /* Table Components */
+  .data-table {
+    @apply w-full border-collapse rounded-md border;
+  }
+
+  .table-header {
+    background-color: hsl(var(--table-header-bg));
+  }
+
+  .table-header-cell {
+    @apply border-b px-4 py-3 text-left align-middle font-medium text-muted-foreground;
+  }
+
+  .table-cell {
+    @apply border-b px-4 py-3 align-middle;
+    transition: background-color var(--app-transition-speed) ease-in-out;
+  }
+
+  .table-row:hover .table-cell {
+    @apply bg-muted/50;
+  }
+
+  /* Navigation Components */
+  .nav-item {
+    @apply flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all;
+    transition-duration: var(--app-transition-speed);
+  }
+
+  .nav-item:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .nav-item.active {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  /* Search and Filter Components */
+  .search-filter-container {
+    @apply flex flex-col sm:flex-row gap-4 mb-6;
+  }
+
+  .search-input-group {
+    @apply flex items-center space-x-2 flex-1;
+  }
+
+  .filter-select-group {
+    @apply flex items-center space-x-2;
+  }
+
+  /* Modal and Dialog Components */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-black/80;
+  }
+
+  .modal-content {
+    @apply fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4;
+    @apply border bg-background p-6 shadow-lg duration-200 rounded-lg;
+  }
+
+  /* Animation Classes */
+  .fade-in {
+    animation: fadeIn var(--app-transition-speed) ease-in-out;
+  }
+
+  .slide-up {
+    animation: slideUp var(--app-transition-speed) ease-out;
+  }
+
+  /* Responsive Utilities */
+  .responsive-grid {
+    @apply grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6;
+  }
+
+  .responsive-flex {
+    @apply flex flex-col sm:flex-row gap-4;
+  }
+}
+
+/* Animation Keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-friendly {
+    background: white !important;
+    color: black !important;
+  }
+}
+
+/* Accessibility Improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+  :root {
+    --border: 0 0% 0%;
+    --input: 0 0% 0%;
+    --ring: 0 0% 0%;
   }
 }
