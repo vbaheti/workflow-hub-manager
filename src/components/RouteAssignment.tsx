@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MapPin, Plus, Search, Users, Route, Edit } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { allRoutes } from '@/data/routes';
 
 interface Agent {
   id: number;
@@ -24,19 +24,6 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCity, setSelectedCity] = useState('all');
   const { toast } = useToast();
-
-  const allRoutes = [
-    { id: 1, name: "Manhattan District", city: "New York", coverage: "Financial District, Midtown", assignedAgent: "John Smith", priority: "High" },
-    { id: 2, name: "Brooklyn Heights", city: "New York", coverage: "Brooklyn Heights, DUMBO", assignedAgent: "John Smith", priority: "Medium" },
-    { id: 3, name: "Hollywood District", city: "Los Angeles", coverage: "Hollywood, West Hollywood", assignedAgent: "Sarah Johnson", priority: "High" },
-    { id: 4, name: "Santa Monica", city: "Los Angeles", coverage: "Santa Monica, Venice", assignedAgent: "Sarah Johnson", priority: "Medium" },
-    { id: 5, name: "Downtown Chicago", city: "Chicago", coverage: "Loop, River North", assignedAgent: "Mike Davis", priority: "High" },
-    { id: 6, name: "Financial District", city: "San Francisco", coverage: "FiDi, SOMA", assignedAgent: "Emily Chen", priority: "High" },
-    { id: 7, name: "Mission Bay", city: "San Francisco", coverage: "Mission Bay, Potrero Hill", assignedAgent: "Emily Chen", priority: "Medium" },
-    { id: 8, name: "South Beach", city: "Miami", coverage: "South Beach, Art Deco District", assignedAgent: "Robert Wilson", priority: "High" },
-    { id: 9, name: "Brickell", city: "Miami", coverage: "Brickell, Downtown Miami", assignedAgent: "Robert Wilson", priority: "Medium" },
-    { id: 10, name: "Queens Central", city: "New York", coverage: "Astoria, Long Island City", assignedAgent: "Unassigned", priority: "Low" }
-  ];
 
   const cities = Array.from(new Set(allRoutes.map(route => route.city)));
 

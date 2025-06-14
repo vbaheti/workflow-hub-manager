@@ -14,18 +14,22 @@ import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 import ServicePriceSetting from './ServicePriceSetting';
 import BankDetails from './BankDetails';
 import { useStateContext } from "../contexts/StateContext";
+import { Agent, RouteAssignment } from '@/types';
+import { useToast } from '@/components/ui/use-toast';
+import { format } from 'date-fns';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
   const { selectedProject, currentProject } = useProject();
   const { selectedStates } = useStateContext();
+  const { toast } = useToast();
 
-  const allAgents = [
+  const allAgents: Agent[] = [
     {
       id: 1,
       name: "Rajesh Kumar",
@@ -111,6 +115,92 @@ const ServiceAgents = () => {
       avatar: ""
     }
   ];
+  
+  const [assignments, setAssignments] = useState<RouteAssignment[]>([
+    {
+      id: '1',
+      agentId: 1,
+      agentName: 'John Smith',
+      routeName: 'Manhattan District A',
+      visitDate: new Date('2024-06-15'),
+      startTime: '09:00',
+      endTime: '17:00',
+      status: 'scheduled',
+      coordinates: [
+        { lat: 40.7580, lng: -73.9855, address: '350 5th Ave, New York, NY 10118' },
+        { lat: 40.7614, lng: -73.9776, address: '11 W 42nd St, New York, NY 10036' },
+        { lat: 40.7505, lng: -73.9934, address: '1 Wall St, New York, NY 10005' }
+      ],
+      notes: 'Focus on high-priority clients',
+      plannedStops: 3,
+      actualStops: 3,
+      efficiency: 95
+    },
+    {
+      id: '2',
+      agentId: 2,
+      agentName: 'Sarah Johnson',
+      routeName: 'Hollywood District B',
+      visitDate: new Date('2024-06-16'),
+      startTime: '08:30',
+      endTime: '16:30',
+      status: 'completed',
+      coordinates: [
+        { lat: 34.0928, lng: -118.3287, address: '6801 Hollywood Blvd, Los Angeles, CA 90028' },
+        { lat: 34.1016, lng: -118.3416, address: '1750 N Highland Ave, Los Angeles, CA 90028' }
+      ],
+      notes: 'Client meetings scheduled',
+      plannedStops: 2,
+      actualStops: 2,
+      efficiency: 100
+    }
+  ]);
+
+  const handleCreateAssignment = (newAssignment: Omit<RouteAssignment, 'id'>) => {
+    const agentAssignments = assignments.filter(a => a.agentId === newAssignment.agentId && a.status !== 'cancelled');
+    
+    const newStartStr = `${format(newAssignment.visitDate, 'yyyy-MM-dd')}T${newAssignment.startTime}:00`;
+    const newEndStr = `${format(newAssignment.visitDate, 'yyyy-MM-dd')}T${newAssignment.endTime}:00`;
+    const newStartTime = new Date(newStartStr);
+    const newEndTime = new Date(newEndStr);
+
+    if (newStartTime >= newEndTime) {
+      toast({
+        title: "Invalid Time Range",
+        description: "Start time must be before end time.",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const conflict = agentAssignments.find(existing => {
+        if (format(existing.visitDate, 'yyyy-MM-dd') !== format(newAssignment.visitDate, 'yyyy-MM-dd')) {
+            return false;
+        }
+        
+        const existingStartTime = new Date(`${format(existing.visitDate, 'yyyy-MM-dd')}T${existing.startTime}:00`);
+        const existingEndTime = new Date(`${format(existing.visitDate, 'yyyy-MM-dd')}T${existing.endTime}:00`);
+        
+        return newStartTime < existingEndTime && newEndTime > existingStartTime;
+    });
+    
+    if (conflict) {
+        toast({
+            title: "Assignment Conflict",
+            description: `This assignment for ${newAssignment.routeName} conflicts with an existing route: ${conflict.routeName} (${conflict.startTime} - ${conflict.endTime}).`,
+            variant: "destructive",
+        });
+        return false;
+    } else {
+        const assignmentWithId = { ...newAssignment, id: new Date().toISOString() };
+        setAssignments(prev => [...prev, assignmentWithId]);
+        toast({
+            title: "Assignment Created",
+            description: `Successfully assigned ${newAssignment.routeName} to ${newAssignment.agentName}.`,
+        });
+        return true;
+    }
+  };
 
   // Helper: return the state name a project is "assigned to" (simulate for demo)
   function getProjectStates(projectName: string): string[] {
@@ -219,11 +309,11 @@ const ServiceAgents = () => {
               setSelectedAgent(agent);
               setEditModalOpen(true);
             }}
-            onAssign={agent => {
+            onAssign={(agent: Agent) => {
               setSelectedAgent(agent);
               setAssignRoutesModalOpen(true);
             }}
-            onPerformance={agent => {
+            onPerformance={(agent: Agent) => {
               setSelectedAgent(agent);
               setPerformanceModalOpen(true);
             }}
@@ -234,6 +324,8 @@ const ServiceAgents = () => {
           <ServiceAgentsAssignment
             agents={projectAgents}
             projectId={selectedProject}
+            assignments={assignments}
+            handleCreateAssignment={handleCreateAssignment}
           />
         </TabsContent>
 
@@ -271,6 +363,8 @@ const ServiceAgents = () => {
         agent={selectedAgent}
         open={assignRoutesModalOpen}
         onClose={() => setAssignRoutesModalOpen(false)}
+        assignments={assignments}
+        handleCreateAssignment={handleCreateAssignment}
       />
       <ViewPerformanceModal
         agent={selectedAgent}

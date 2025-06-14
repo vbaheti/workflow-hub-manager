@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,76 +7,16 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CalendarIcon, MapPin, Plus, Clock, Navigation, Edit, CheckCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import NewRouteForm from './NewRouteForm';
-
-interface Agent {
-  id: number;
-  name: string;
-  avatar: string;
-  location: string;
-}
-
-interface RouteAssignment {
-  id: string;
-  agentId: number;
-  agentName: string;
-  routeName: string;
-  visitDate: Date;
-  startTime: string;
-  endTime: string;
-  status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  coordinates: { lat: number; lng: number; address: string }[];
-  notes: string;
-  plannedStops: number;
-  actualStops?: number;
-  efficiency?: number;
-}
+import { Agent, RouteAssignment } from '@/types';
 
 interface TimeBoundRouteAssignmentProps {
   agents: Agent[];
   projectId: string;
+  assignments: RouteAssignment[];
+  setAssignments: React.Dispatch<React.SetStateAction<RouteAssignment[]>>;
 }
 
-const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmentProps) => {
-  const [assignments, setAssignments] = useState<RouteAssignment[]>([
-    {
-      id: '1',
-      agentId: 1,
-      agentName: 'John Smith',
-      routeName: 'Manhattan District A',
-      visitDate: new Date('2024-06-15'),
-      startTime: '09:00',
-      endTime: '17:00',
-      status: 'scheduled',
-      coordinates: [
-        { lat: 40.7580, lng: -73.9855, address: '350 5th Ave, New York, NY 10118' },
-        { lat: 40.7614, lng: -73.9776, address: '11 W 42nd St, New York, NY 10036' },
-        { lat: 40.7505, lng: -73.9934, address: '1 Wall St, New York, NY 10005' }
-      ],
-      notes: 'Focus on high-priority clients',
-      plannedStops: 3,
-      actualStops: 3,
-      efficiency: 95
-    },
-    {
-      id: '2',
-      agentId: 2,
-      agentName: 'Sarah Johnson',
-      routeName: 'Hollywood District B',
-      visitDate: new Date('2024-06-16'),
-      startTime: '08:30',
-      endTime: '16:30',
-      status: 'completed',
-      coordinates: [
-        { lat: 34.0928, lng: -118.3287, address: '6801 Hollywood Blvd, Los Angeles, CA 90028' },
-        { lat: 34.1016, lng: -118.3416, address: '1750 N Highland Ave, Los Angeles, CA 90028' }
-      ],
-      notes: 'Client meetings scheduled',
-      plannedStops: 2,
-      actualStops: 2,
-      efficiency: 100
-    }
-  ]);
-
+const TimeBoundRouteAssignment = ({ agents, projectId, assignments, setAssignments }: TimeBoundRouteAssignmentProps) => {
   const [showNewRouteForm, setShowNewRouteForm] = useState(false);
 
   const getStatusBadge = (status: string) => {
@@ -183,7 +122,7 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
                   {Math.round(filteredAssignments
                     .filter(a => a.efficiency)
                     .reduce((sum, a) => sum + (a.efficiency || 0), 0) / 
-                    filteredAssignments.filter(a => a.efficiency).length)}%
+                    (filteredAssignments.filter(a => a.efficiency).length || 1))}%
                 </p>
               </div>
               <AlertCircle className="h-8 w-8 text-purple-600" />
