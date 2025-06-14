@@ -1,35 +1,34 @@
 import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Route, BarChart3, Truck, DollarSign, Building2 } from 'lucide-react';
-import { useProject } from '../contexts/ProjectContext';
+import { Search, Mail, Phone, MapPin, MoreHorizontal, Route, BarChart3, TrendingUp, Users, Calendar, Truck } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import RouteAssignment from './RouteAssignment';
+import AgentAnalytics from './AgentAnalytics';
+import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
 import AddNewAgentForm from './AddNewAgentForm';
-import ViewAgentModal from './ViewAgentModal';
+import ServiceDeliveryTracking from './ServiceDeliveryTracking';
+import { useProject } from '../contexts/ProjectContext';
+import ViewAgentModal from "./ViewAgentModal";
 import EditAgentModal from "./EditAgentModal";
 import AssignRoutesModal from "./AssignRoutesModal";
 import ViewPerformanceModal from "./ViewPerformanceModal";
-import ServiceAgentsManagement from './ServiceAgentsManagement';
-import ServiceAgentsAssignment from './ServiceAgentsAssignment';
-import ServiceAgentsTracking from './ServiceAgentsTracking';
-import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
-import ServicePriceSetting from './ServicePriceSetting';
-import BankDetails from './BankDetails';
-import { useStateContext } from "../contexts/StateContext";
-import { Agent, RouteAssignment } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
-import { format } from 'date-fns';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [selectedAgent, setSelectedAgent] = useState<any>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
   const { selectedProject, currentProject } = useProject();
-  const { selectedStates } = useStateContext();
-  const { toast } = useToast();
 
-  const allAgents: Agent[] = [
+  const allAgents = [
     {
       id: 1,
       name: "Rajesh Kumar",
@@ -115,123 +114,11 @@ const ServiceAgents = () => {
       avatar: ""
     }
   ];
-  
-  const [assignments, setAssignments] = useState<RouteAssignment[]>([
-    {
-      id: '1',
-      agentId: 1,
-      agentName: 'John Smith',
-      routeName: 'Manhattan District A',
-      visitDate: new Date('2024-06-15'),
-      startTime: '09:00',
-      endTime: '17:00',
-      status: 'scheduled',
-      coordinates: [
-        { lat: 40.7580, lng: -73.9855, address: '350 5th Ave, New York, NY 10118' },
-        { lat: 40.7614, lng: -73.9776, address: '11 W 42nd St, New York, NY 10036' },
-        { lat: 40.7505, lng: -73.9934, address: '1 Wall St, New York, NY 10005' }
-      ],
-      notes: 'Focus on high-priority clients',
-      plannedStops: 3,
-      actualStops: 3,
-      efficiency: 95
-    },
-    {
-      id: '2',
-      agentId: 2,
-      agentName: 'Sarah Johnson',
-      routeName: 'Hollywood District B',
-      visitDate: new Date('2024-06-16'),
-      startTime: '08:30',
-      endTime: '16:30',
-      status: 'completed',
-      coordinates: [
-        { lat: 34.0928, lng: -118.3287, address: '6801 Hollywood Blvd, Los Angeles, CA 90028' },
-        { lat: 34.1016, lng: -118.3416, address: '1750 N Highland Ave, Los Angeles, CA 90028' }
-      ],
-      notes: 'Client meetings scheduled',
-      plannedStops: 2,
-      actualStops: 2,
-      efficiency: 100
-    }
-  ]);
 
-  const handleCreateAssignment = (newAssignment: Omit<RouteAssignment, 'id'>) => {
-    const agentAssignments = assignments.filter(a => a.agentId === newAssignment.agentId && a.status !== 'cancelled');
-    
-    const newStartStr = `${format(newAssignment.visitDate, 'yyyy-MM-dd')}T${newAssignment.startTime}:00`;
-    const newEndStr = `${format(newAssignment.visitDate, 'yyyy-MM-dd')}T${newAssignment.endTime}:00`;
-    const newStartTime = new Date(newStartStr);
-    const newEndTime = new Date(newEndStr);
-
-    if (newStartTime >= newEndTime) {
-      toast({
-        title: "Invalid Time Range",
-        description: "Start time must be before end time.",
-        variant: "destructive",
-      });
-      return false;
-    }
-
-    const conflict = agentAssignments.find(existing => {
-        if (format(existing.visitDate, 'yyyy-MM-dd') !== format(newAssignment.visitDate, 'yyyy-MM-dd')) {
-            return false;
-        }
-        
-        const existingStartTime = new Date(`${format(existing.visitDate, 'yyyy-MM-dd')}T${existing.startTime}:00`);
-        const existingEndTime = new Date(`${format(existing.visitDate, 'yyyy-MM-dd')}T${existing.endTime}:00`);
-        
-        return newStartTime < existingEndTime && newEndTime > existingStartTime;
-    });
-    
-    if (conflict) {
-        toast({
-            title: "Assignment Conflict",
-            description: `This assignment for ${newAssignment.routeName} conflicts with an existing route: ${conflict.routeName} (${conflict.startTime} - ${conflict.endTime}).`,
-            variant: "destructive",
-        });
-        return false;
-    } else {
-        const assignmentWithId = { ...newAssignment, id: new Date().toISOString() };
-        setAssignments(prev => [...prev, assignmentWithId]);
-        toast({
-            title: "Assignment Created",
-            description: `Successfully assigned ${newAssignment.routeName} to ${newAssignment.agentName}.`,
-        });
-        return true;
-    }
-  };
-
-  // Helper: return the state name a project is "assigned to" (simulate for demo)
-  function getProjectStates(projectName: string): string[] {
-    // Simple mock mapping for demonstration.
-    if (projectName.toLowerCase().includes("delhi")) return ["Delhi"];
-    if (projectName.toLowerCase().includes("mumbai")) return ["Maharashtra"];
-    if (projectName.toLowerCase().includes("bangalore") || projectName.toLowerCase().includes("karnataka")) return ["Karnataka"];
-    if (projectName.toLowerCase().includes("dhaka")) return ["West Bengal"];
-    if (projectName.toLowerCase().includes("dubai") || projectName.toLowerCase().includes("uae")) return ["Rajasthan"];
-    return ["Delhi", "Maharashtra", "West Bengal"];
-  }
-
-  // Filter agents based on selected project and MULTIPLE states
+  // Filter agents based on selected project
   const projectAgents = allAgents.filter(agent => {
     if (!currentProject) return false;
-    const agentInProject = agent.projects.includes(currentProject.name);
-    // Simulated state: agent is considered in the state if assignedRoutes include locations for any selected state
-    const routeMatch =
-      selectedStates.length === 0
-        ? true // no state filter
-        : agent.assignedRoutes.some(
-            (r: string) =>
-              selectedStates.some((state) => r.toLowerCase().includes(state.toLowerCase()))
-          );
-    // As we lack state data for agents, fallback: show if project is mapped to any selected state
-    const projectStates = getProjectStates(currentProject.name);
-    const mappedState =
-      selectedStates.length === 0
-        ? true
-        : selectedStates.some((s) => projectStates.includes(s));
-    return agentInProject && (routeMatch || mappedState);
+    return agent.projects.includes(currentProject.name);
   });
 
   const filteredAgents = projectAgents.filter(agent =>
@@ -239,6 +126,21 @@ const ServiceAgents = () => {
     agent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     agent.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const getStatusBadge = (status: string) => {
+    return status === 'active' ? 
+      <Badge className="bg-green-100 text-green-800">Active</Badge> :
+      <Badge variant="secondary">Inactive</Badge>;
+  };
+
+  const getPerformanceBadge = (performance: string) => {
+    const variants = {
+      excellent: <Badge className="bg-blue-100 text-blue-800">Excellent</Badge>,
+      good: <Badge className="bg-green-100 text-green-800">Good</Badge>,
+      average: <Badge variant="secondary">Average</Badge>
+    };
+    return variants[performance as keyof typeof variants];
+  };
 
   const handleAgentAdded = (agent: any) => {
     // In a real application, this would update the agents list
@@ -258,25 +160,27 @@ const ServiceAgents = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-5">
+      <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
           <p className="text-muted-foreground">{currentProject.description}</p>
         </div>
-        <div className="flex flex-col md:flex-row gap-4 md:items-end">
-          <AddNewAgentForm onAgentAdded={handleAgentAdded} />
-        </div>
+        <AddNewAgentForm onAgentAdded={handleAgentAdded} />
       </div>
 
       <Tabs defaultValue="agents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="agents" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Agents
           </TabsTrigger>
-          <TabsTrigger value="assignment" className="flex items-center gap-2">
+          <TabsTrigger value="routes" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
-            Assignment & Scheduling
+            Route Assignment
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Schedule Routes
           </TabsTrigger>
           <TabsTrigger value="delivery" className="flex items-center gap-2">
             <Truck className="h-4 w-4" />
@@ -286,65 +190,162 @@ const ServiceAgents = () => {
             <BarChart3 className="h-4 w-4" />
             Analytics
           </TabsTrigger>
-          <TabsTrigger value="service-pricing" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Service Pricing
-          </TabsTrigger>
-          <TabsTrigger value="bank-details" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Bank Details
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="agents">
-          <ServiceAgentsManagement
-            agents={filteredAgents}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onView={agent => {
-              setSelectedAgent(agent);
-              setViewModalOpen(true);
-            }}
-            onEdit={agent => {
-              setSelectedAgent(agent);
-              setEditModalOpen(true);
-            }}
-            onAssign={(agent: Agent) => {
-              setSelectedAgent(agent);
-              setAssignRoutesModalOpen(true);
-            }}
-            onPerformance={(agent: Agent) => {
-              setSelectedAgent(agent);
-              setPerformanceModalOpen(true);
-            }}
-          />
+          <Card>
+            <CardHeader>
+              <CardTitle>Agent Management</CardTitle>
+              <CardDescription>
+                Overview of agents in {currentProject.name}
+              </CardDescription>
+              <div className="flex items-center space-x-2">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search agents..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="max-w-sm"
+                />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Agent</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Location</TableHead>
+                    <TableHead>Projects</TableHead>
+                    <TableHead>Routes</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Performance</TableHead>
+                    <TableHead>Collections</TableHead>
+                    <TableHead></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredAgents.map((agent) => (
+                    <TableRow key={agent.id} className="hover:bg-gray-50">
+                      <TableCell>
+                        <div className="flex items-center space-x-3">
+                          <Avatar>
+                            <AvatarImage src={agent.avatar} />
+                            <AvatarFallback>
+                              {agent.name.split(' ').map(n => n[0]).join('')}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium">{agent.name}</p>
+                            <p className="text-sm text-muted-foreground">ID: {agent.id.toString().padStart(4, '0')}</p>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <Mail className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{agent.email}</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Phone className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-sm">{agent.phone}</span>
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-3 w-3 text-muted-foreground" />
+                          <span>{agent.location}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {agent.projects.filter(project => project === currentProject.name).map((project, index) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {project}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {agent.assignedRoutes.map((route, index) => (
+                            <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700">
+                              {route}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell>{getStatusBadge(agent.status)}</TableCell>
+                      <TableCell>{getPerformanceBadge(agent.performance)}</TableCell>
+                      <TableCell className="font-semibold">{agent.totalCollections}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setViewModalOpen(true);
+                              }}
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setEditModalOpen(true);
+                              }}
+                            >
+                              Edit Agent
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setAssignRoutesModalOpen(true);
+                              }}
+                            >
+                              Assign Routes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setPerformanceModalOpen(true);
+                              }}
+                            >
+                              View Performance
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="assignment">
-          <ServiceAgentsAssignment
-            agents={projectAgents}
-            projectId={selectedProject}
-            assignments={assignments}
-            handleCreateAssignment={handleCreateAssignment}
-          />
+        <TabsContent value="routes">
+          <RouteAssignment agents={projectAgents} />
+        </TabsContent>
+
+        <TabsContent value="schedule">
+          <TimeBoundRouteAssignment agents={projectAgents} projectId={selectedProject} />
         </TabsContent>
 
         <TabsContent value="delivery">
-          <ServiceAgentsTracking />
+          <ServiceDeliveryTracking />
         </TabsContent>
 
         <TabsContent value="analytics">
-          <ServiceAgentsAnalytics
-            agents={projectAgents}
-          />
-        </TabsContent>
-
-        <TabsContent value="service-pricing">
-          <ServicePriceSetting />
-        </TabsContent>
-
-        <TabsContent value="bank-details">
-          <BankDetails />
+          <AgentAnalytics agents={projectAgents} />
         </TabsContent>
       </Tabs>
 
@@ -363,8 +364,6 @@ const ServiceAgents = () => {
         agent={selectedAgent}
         open={assignRoutesModalOpen}
         onClose={() => setAssignRoutesModalOpen(false)}
-        assignments={assignments}
-        handleCreateAssignment={handleCreateAssignment}
       />
       <ViewPerformanceModal
         agent={selectedAgent}
