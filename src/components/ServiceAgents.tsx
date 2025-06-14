@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,15 +6,45 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, UserPlus, Mail, Phone, MapPin, MoreHorizontal, Route, BarChart3, TrendingUp, Users } from 'lucide-react';
+import { Search, UserPlus, Mail, Phone, MapPin, MoreHorizontal, Route, BarChart3, TrendingUp, Users, Calendar } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import RouteAssignment from './RouteAssignment';
 import AgentAnalytics from './AgentAnalytics';
+import ProjectSelector from './ProjectSelector';
+import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProject, setSelectedProject] = useState('project-alpha');
 
-  const agents = [
+  const projects = [
+    {
+      id: 'project-alpha',
+      name: 'Project Alpha',
+      status: 'active' as const,
+      agentCount: 3,
+      routeCount: 5,
+      description: 'Manhattan and Brooklyn field operations'
+    },
+    {
+      id: 'project-beta',
+      name: 'Project Beta',
+      status: 'active' as const,
+      agentCount: 2,
+      routeCount: 4,
+      description: 'West Coast expansion initiative'
+    },
+    {
+      id: 'project-gamma',
+      name: 'Project Gamma',
+      status: 'on-hold' as const,
+      agentCount: 1,
+      routeCount: 2,
+      description: 'Chicago market research'
+    }
+  ];
+
+  const allAgents = [
     {
       id: 1,
       name: "John Smith",
@@ -88,7 +117,14 @@ const ServiceAgents = () => {
     }
   ];
 
-  const filteredAgents = agents.filter(agent =>
+  // Filter agents based on selected project
+  const projectAgents = allAgents.filter(agent => {
+    const currentProject = projects.find(p => p.id === selectedProject);
+    if (!currentProject) return false;
+    return agent.projects.includes(currentProject.name);
+  });
+
+  const filteredAgents = projectAgents.filter(agent =>
     agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     agent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     agent.location.toLowerCase().includes(searchTerm.toLowerCase())
@@ -114,7 +150,7 @@ const ServiceAgents = () => {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Service Agents</h2>
-          <p className="text-muted-foreground">Manage agents, routes, and performance analytics</p>
+          <p className="text-muted-foreground">Manage agents, routes, and performance analytics by project</p>
         </div>
         <Button className="flex items-center gap-2">
           <UserPlus className="h-4 w-4" />
@@ -122,8 +158,14 @@ const ServiceAgents = () => {
         </Button>
       </div>
 
+      <ProjectSelector
+        selectedProject={selectedProject}
+        onProjectChange={setSelectedProject}
+        projects={projects}
+      />
+
       <Tabs defaultValue="agents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="agents" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Agents
@@ -131,6 +173,10 @@ const ServiceAgents = () => {
           <TabsTrigger value="routes" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
             Route Assignment
+          </TabsTrigger>
+          <TabsTrigger value="schedule" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Schedule Routes
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -142,7 +188,9 @@ const ServiceAgents = () => {
           <Card>
             <CardHeader>
               <CardTitle>Agent Management</CardTitle>
-              <CardDescription>Overview of all service agents and their performance</CardDescription>
+              <CardDescription>
+                Overview of agents in {projects.find(p => p.id === selectedProject)?.name}
+              </CardDescription>
               <div className="flex items-center space-x-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
                 <Input
@@ -249,11 +297,15 @@ const ServiceAgents = () => {
         </TabsContent>
 
         <TabsContent value="routes">
-          <RouteAssignment agents={agents} />
+          <RouteAssignment agents={projectAgents} />
+        </TabsContent>
+
+        <TabsContent value="schedule">
+          <TimeBoundRouteAssignment agents={projectAgents} projectId={selectedProject} />
         </TabsContent>
 
         <TabsContent value="analytics">
-          <AgentAnalytics agents={agents} />
+          <AgentAnalytics agents={projectAgents} />
         </TabsContent>
       </Tabs>
     </div>
