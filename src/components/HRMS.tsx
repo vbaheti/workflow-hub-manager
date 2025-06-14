@@ -6,8 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, UserPlus, Calendar, Clock, Search, Filter, Eye, Edit } from 'lucide-react';
-import ProjectSelector from './ProjectSelector';
-import { useProject } from '../contexts/ProjectContext';
 
 interface Employee {
   id: string;
@@ -19,152 +17,49 @@ interface Employee {
   joinDate: string;
   salary: number;
   leaveBalance: number;
-  projectIds: string[];
-  region: string;
 }
 
+const mockEmployees: Employee[] = [
+  {
+    id: '1',
+    name: 'John Smith',
+    email: 'john.smith@company.com',
+    position: 'Senior Service Agent',
+    department: 'Sales',
+    status: 'active',
+    joinDate: '2022-03-15',
+    salary: 65000,
+    leaveBalance: 15
+  },
+  {
+    id: '2',
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@company.com',
+    position: 'Service Agent',
+    department: 'Customer Support',
+    status: 'active',
+    joinDate: '2023-01-20',
+    salary: 55000,
+    leaveBalance: 12
+  },
+  {
+    id: '3',
+    name: 'Mike Davis',
+    email: 'mike.davis@company.com',
+    position: 'Team Lead',
+    department: 'Operations',
+    status: 'on-leave',
+    joinDate: '2021-08-10',
+    salary: 75000,
+    leaveBalance: 8
+  }
+];
+
 export default function HRMS() {
-  const { currentProject, projects, selectedProject, setSelectedProject } = useProject();
-  
-  const getRegionalEmployees = (): Employee[] => {
-    const allEmployees: Employee[] = [
-      // India employees
-      {
-        id: '1',
-        name: 'Arjun Sharma',
-        email: 'arjun.sharma@company.com',
-        position: 'Senior Service Agent',
-        department: 'Field Operations',
-        status: 'active',
-        joinDate: '2022-03-15',
-        salary: 850000,
-        leaveBalance: 15,
-        projectIds: ['project-mumbai', 'project-delhi'],
-        region: 'India'
-      },
-      {
-        id: '2',
-        name: 'Priya Patel',
-        email: 'priya.patel@company.com',
-        position: 'Service Agent',
-        department: 'Customer Support',
-        status: 'active',
-        joinDate: '2023-01-20',
-        salary: 620000,
-        leaveBalance: 12,
-        projectIds: ['project-mumbai'],
-        region: 'India'
-      },
-      {
-        id: '3',
-        name: 'Rajesh Kumar',
-        email: 'rajesh.kumar@company.com',
-        position: 'Team Lead',
-        department: 'Operations',
-        status: 'on-leave',
-        joinDate: '2021-08-10',
-        salary: 950000,
-        leaveBalance: 8,
-        projectIds: ['project-delhi'],
-        region: 'India'
-      },
-      // South Asia employees
-      {
-        id: '4',
-        name: 'Ahmed Hassan',
-        email: 'ahmed.hassan@company.com',
-        position: 'Senior Service Agent',
-        department: 'Field Operations',
-        status: 'active',
-        joinDate: '2022-06-15',
-        salary: 45000,
-        leaveBalance: 18,
-        projectIds: ['project-dhaka'],
-        region: 'South Asia'
-      },
-      {
-        id: '5',
-        name: 'Fatima Khan',
-        email: 'fatima.khan@company.com',
-        position: 'Service Agent',
-        department: 'Customer Support',
-        status: 'active',
-        joinDate: '2023-02-10',
-        salary: 38000,
-        leaveBalance: 14,
-        projectIds: ['project-dhaka'],
-        region: 'South Asia'
-      },
-      // South East Asia employees
-      {
-        id: '6',
-        name: 'Lim Wei Ming',
-        email: 'wei.ming@company.com',
-        position: 'Senior Service Agent',
-        department: 'Field Operations',
-        status: 'active',
-        joinDate: '2022-01-15',
-        salary: 65000,
-        leaveBalance: 20,
-        projectIds: ['project-singapore'],
-        region: 'South East Asia'
-      },
-      {
-        id: '7',
-        name: 'Siti Nurhaliza',
-        email: 'siti.nurhaliza@company.com',
-        position: 'Service Agent',
-        department: 'Customer Support',
-        status: 'active',
-        joinDate: '2023-03-20',
-        salary: 48000,
-        leaveBalance: 16,
-        projectIds: ['project-kuala-lumpur'],
-        region: 'South East Asia'
-      },
-      // African Union employees
-      {
-        id: '8',
-        name: 'Kwame Asante',
-        email: 'kwame.asante@company.com',
-        position: 'Senior Service Agent',
-        department: 'Field Operations',
-        status: 'active',
-        joinDate: '2022-04-15',
-        salary: 42000,
-        leaveBalance: 22,
-        projectIds: ['project-lagos'],
-        region: 'African Union'
-      },
-      {
-        id: '9',
-        name: 'Amara Johnson',
-        email: 'amara.johnson@company.com',
-        position: 'Team Lead',
-        department: 'Operations',
-        status: 'active',
-        joinDate: '2021-11-10',
-        salary: 55000,
-        leaveBalance: 19,
-        projectIds: ['project-johannesburg'],
-        region: 'African Union'
-      }
-    ];
-
-    return allEmployees.filter(employee => 
-      employee.projectIds.includes(selectedProject)
-    );
-  };
-
-  const [employees, setEmployees] = useState<Employee[]>(getRegionalEmployees());
+  const [employees, setEmployees] = useState<Employee[]>(mockEmployees);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
-
-  // Update employees when project changes
-  React.useEffect(() => {
-    setEmployees(getRegionalEmployees());
-  }, [selectedProject]);
 
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -175,11 +70,6 @@ export default function HRMS() {
     
     return matchesSearch && matchesDepartment && matchesStatus;
   });
-
-  const formatCurrency = (amount: number) => {
-    if (!currentProject) return `$${amount.toLocaleString()}`;
-    return `${currentProject.currencySymbol}${amount.toLocaleString()}`;
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -196,41 +86,16 @@ export default function HRMS() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-start">
+      <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Human Resource Management</h1>
           <p className="text-gray-600 mt-2">Manage employee information, attendance, and leave requests</p>
         </div>
-        <div className="flex items-center space-x-4">
-          <div className="w-80">
-            <ProjectSelector
-              selectedProject={selectedProject}
-              onProjectChange={setSelectedProject}
-              projects={projects}
-            />
-          </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Employee
-          </Button>
-        </div>
+        <Button className="bg-blue-600 hover:bg-blue-700">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add Employee
+        </Button>
       </div>
-
-      {currentProject && (
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="pt-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold">{currentProject.name}</h3>
-                <p className="text-sm text-muted-foreground">{currentProject.region} • {currentProject.description}</p>
-              </div>
-              <Badge className="bg-blue-100 text-blue-800">
-                {employees.length} employees
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -306,7 +171,7 @@ export default function HRMS() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="Field Operations">Field Operations</SelectItem>
+                <SelectItem value="Sales">Sales</SelectItem>
                 <SelectItem value="Customer Support">Customer Support</SelectItem>
                 <SelectItem value="Operations">Operations</SelectItem>
               </SelectContent>
@@ -346,9 +211,8 @@ export default function HRMS() {
               <div className="space-y-2 mb-4">
                 <p className="text-sm"><span className="font-medium">Email:</span> {employee.email}</p>
                 <p className="text-sm"><span className="font-medium">Join Date:</span> {employee.joinDate}</p>
-                <p className="text-sm"><span className="font-medium">Salary:</span> {formatCurrency(employee.salary)}</p>
+                <p className="text-sm"><span className="font-medium">Salary:</span> ${employee.salary.toLocaleString()}</p>
                 <p className="text-sm"><span className="font-medium">Leave Balance:</span> {employee.leaveBalance} days</p>
-                <p className="text-sm"><span className="font-medium">Region:</span> {employee.region}</p>
               </div>
               
               <div className="flex space-x-2">
@@ -371,7 +235,7 @@ export default function HRMS() {
           <CardContent className="p-12 text-center">
             <Filter className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No employees found</h3>
-            <p className="text-gray-600">Try adjusting your search criteria or change the selected project.</p>
+            <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
           </CardContent>
         </Card>
       )}
