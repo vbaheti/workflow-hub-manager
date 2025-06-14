@@ -18,7 +18,24 @@ const ServiceAgents = () => {
   
   const { selectedProject } = useProject();
   const { canAccess } = usePermissions();
-  const { filteredAgents, projectAgents, searchTerm, setSearchTerm, currentProject } = useAgentData();
+  
+  // Add fallback in case useAgentData hook fails
+  let filteredAgents = [];
+  let projectAgents = [];
+  let searchTerm = '';
+  let setSearchTerm = () => {};
+  let currentProject = null;
+
+  try {
+    const agentData = useAgentData();
+    filteredAgents = agentData.filteredAgents || [];
+    projectAgents = agentData.projectAgents || [];
+    searchTerm = agentData.searchTerm || '';
+    setSearchTerm = agentData.setSearchTerm || (() => {});
+    currentProject = agentData.currentProject || null;
+  } catch (error) {
+    console.error('Error loading agent data:', error);
+  }
 
   const handleAgentAdded = (agent: any) => {
     console.log('Agent added:', agent);
