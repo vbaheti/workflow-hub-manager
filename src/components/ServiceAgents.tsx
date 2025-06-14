@@ -12,37 +12,11 @@ import RouteAssignment from './RouteAssignment';
 import AgentAnalytics from './AgentAnalytics';
 import ProjectSelector from './ProjectSelector';
 import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
+import { useProject } from '../contexts/ProjectContext';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedProject, setSelectedProject] = useState('project-alpha');
-
-  const projects = [
-    {
-      id: 'project-alpha',
-      name: 'Project Alpha',
-      status: 'active' as const,
-      agentCount: 3,
-      routeCount: 5,
-      description: 'Manhattan and Brooklyn field operations'
-    },
-    {
-      id: 'project-beta',
-      name: 'Project Beta',
-      status: 'active' as const,
-      agentCount: 2,
-      routeCount: 4,
-      description: 'West Coast expansion initiative'
-    },
-    {
-      id: 'project-gamma',
-      name: 'Project Gamma',
-      status: 'on-hold' as const,
-      agentCount: 1,
-      routeCount: 2,
-      description: 'Chicago market research'
-    }
-  ];
+  const { selectedProject, setSelectedProject, projects, currentProject } = useProject();
 
   const allAgents = [
     {
@@ -119,7 +93,6 @@ const ServiceAgents = () => {
 
   // Filter agents based on selected project
   const projectAgents = allAgents.filter(agent => {
-    const currentProject = projects.find(p => p.id === selectedProject);
     if (!currentProject) return false;
     return agent.projects.includes(currentProject.name);
   });
@@ -189,7 +162,7 @@ const ServiceAgents = () => {
             <CardHeader>
               <CardTitle>Agent Management</CardTitle>
               <CardDescription>
-                Overview of agents in {projects.find(p => p.id === selectedProject)?.name}
+                Overview of agents in {currentProject?.name}
               </CardDescription>
               <div className="flex items-center space-x-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
