@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, Building2, Plus, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
+import NewAssignmentForm from './NewAssignmentForm';
 
 interface Agent {
   id: number;
@@ -77,6 +77,8 @@ const AgentProjectAssignment = ({ agents }: AgentProjectAssignmentProps) => {
     }
   ]);
 
+  const [showNewAssignmentForm, setShowNewAssignmentForm] = useState(false);
+
   const availableProjects = [
     { id: 'mumbai-fin', name: 'Mumbai Financial Hub' },
     { id: 'delhi-net', name: 'Delhi Service Network' },
@@ -98,6 +100,11 @@ const AgentProjectAssignment = ({ agents }: AgentProjectAssignmentProps) => {
   const checkWorkloadConflict = (agentId: number, newWorkload: number) => {
     const currentWorkload = getTotalWorkload(agentId);
     return currentWorkload + newWorkload > 100;
+  };
+
+  const handleNewAssignment = (newAssignment: any) => {
+    setAssignments([...assignments, newAssignment]);
+    setShowNewAssignmentForm(false);
   };
 
   const getStatusBadge = (status: string) => {
@@ -156,6 +163,18 @@ const AgentProjectAssignment = ({ agents }: AgentProjectAssignmentProps) => {
 
   const filteredAgents = agents.filter(agent => agent.status === 'active');
 
+  if (showNewAssignmentForm) {
+    return (
+      <NewAssignmentForm
+        agents={filteredAgents}
+        projects={availableProjects}
+        onAssignmentCreated={handleNewAssignment}
+        onCancel={() => setShowNewAssignmentForm(false)}
+        onConflictCheck={checkWorkloadConflict}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -163,13 +182,16 @@ const AgentProjectAssignment = ({ agents }: AgentProjectAssignmentProps) => {
           <h3 className="text-lg font-semibold">Agent-to-Project Assignments</h3>
           <p className="text-sm text-muted-foreground">Manage agent workload and project assignments</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => setShowNewAssignmentForm(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           New Assignment
         </Button>
       </div>
 
-      {/* Workload Overview Cards */}
+      {/* Performance Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
