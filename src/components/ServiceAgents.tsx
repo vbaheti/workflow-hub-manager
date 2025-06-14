@@ -13,8 +13,6 @@ import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 import ServicePriceSetting from './ServicePriceSetting';
 import BankDetails from './BankDetails';
-import ProjectSelector from "./ProjectSelector";
-import StateSelector from "./StateSelector";
 import { useStateContext } from "../contexts/StateContext";
 
 const ServiceAgents = () => {
@@ -24,7 +22,7 @@ const ServiceAgents = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
-  const { selectedProject, setSelectedProject, projects, currentProject } = useProject();
+  const { selectedProject, currentProject } = useProject();
   const { selectedStates } = useStateContext();
 
   const allAgents = [
@@ -176,15 +174,6 @@ const ServiceAgents = () => {
           <p className="text-muted-foreground">{currentProject.description}</p>
         </div>
         <div className="flex flex-col md:flex-row gap-4 md:items-end">
-          {/* State Filter below ProjectSelector, but inside same flex block */}
-          <div className="flex flex-col gap-1">
-            <ProjectSelector
-              selectedProject={selectedProject}
-              onProjectChange={setSelectedProject}
-              projects={projects}
-            />
-            <StateSelector />
-          </div>
           <AddNewAgentForm onAgentAdded={handleAgentAdded} />
         </div>
       </div>
