@@ -9,7 +9,7 @@ import AddEmployeeModal from './AddEmployeeModal';
 import ViewEmployeeModal from './ViewEmployeeModal';
 import EditEmployeeModal from './EditEmployeeModal';
 
-interface Employee {
+export interface Employee {
   id: string;
   name: string;
   email: string;
