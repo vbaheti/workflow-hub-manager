@@ -23,7 +23,7 @@ const ServiceAgents = () => {
   let filteredAgents = [];
   let projectAgents = [];
   let searchTerm = '';
-  let setSearchTerm = () => {};
+  let setSearchTerm = (term: string) => {};
   let currentProject = null;
 
   try {
@@ -31,7 +31,7 @@ const ServiceAgents = () => {
     filteredAgents = agentData.filteredAgents || [];
     projectAgents = agentData.projectAgents || [];
     searchTerm = agentData.searchTerm || '';
-    setSearchTerm = agentData.setSearchTerm || (() => {});
+    setSearchTerm = agentData.setSearchTerm || ((term: string) => {});
     currentProject = agentData.currentProject || null;
   } catch (error) {
     console.error('Error loading agent data:', error);
