@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,9 +14,18 @@ import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
 import AddNewAgentForm from './AddNewAgentForm';
 import ServiceDeliveryTracking from './ServiceDeliveryTracking';
 import { useProject } from '../contexts/ProjectContext';
+import ViewAgentModal from "./ViewAgentModal";
+import EditAgentModal from "./EditAgentModal";
+import AssignRoutesModal from "./AssignRoutesModal";
+import ViewPerformanceModal from "./ViewPerformanceModal";
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAgent, setSelectedAgent] = useState<any>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
+  const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
   const { selectedProject, currentProject } = useProject();
 
   const allAgents = [
@@ -280,10 +288,38 @@ const ServiceAgents = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
-                            <DropdownMenuItem>Edit Agent</DropdownMenuItem>
-                            <DropdownMenuItem>Assign Routes</DropdownMenuItem>
-                            <DropdownMenuItem>View Performance</DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setViewModalOpen(true);
+                              }}
+                            >
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setEditModalOpen(true);
+                              }}
+                            >
+                              Edit Agent
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setAssignRoutesModalOpen(true);
+                              }}
+                            >
+                              Assign Routes
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => {
+                                setSelectedAgent(agent);
+                                setPerformanceModalOpen(true);
+                              }}
+                            >
+                              View Performance
+                            </DropdownMenuItem>
                             <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -312,6 +348,28 @@ const ServiceAgents = () => {
           <AgentAnalytics agents={projectAgents} />
         </TabsContent>
       </Tabs>
+
+      {/* MODALS */}
+      <ViewAgentModal
+        agent={selectedAgent}
+        open={viewModalOpen}
+        onClose={() => setViewModalOpen(false)}
+      />
+      <EditAgentModal
+        agent={selectedAgent}
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+      />
+      <AssignRoutesModal
+        agent={selectedAgent}
+        open={assignRoutesModalOpen}
+        onClose={() => setAssignRoutesModalOpen(false)}
+      />
+      <ViewPerformanceModal
+        agent={selectedAgent}
+        open={performanceModalOpen}
+        onClose={() => setPerformanceModalOpen(false)}
+      />
     </div>
   );
 };
