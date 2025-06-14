@@ -13,6 +13,7 @@ import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 import ServicePriceSetting from './ServicePriceSetting';
 import BankDetails from './BankDetails';
+import ProjectSelector from "./ProjectSelector";
 import StateSelector from "./StateSelector";
 import { useStateContext } from "../contexts/StateContext";
 
@@ -24,7 +25,7 @@ const ServiceAgents = () => {
   const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
   const { selectedProject, currentProject } = useProject();
-  const { selectedState } = useStateContext();
+  const { selectedStates } = useStateContext();
 
   const allAgents = [
     {
@@ -124,17 +125,25 @@ const ServiceAgents = () => {
     return ["Delhi", "Maharashtra", "West Bengal"];
   }
 
-  // Filter agents based on selected project and state
+  // Filter agents based on selected project and MULTIPLE states
   const projectAgents = allAgents.filter(agent => {
     if (!currentProject) return false;
     const agentInProject = agent.projects.includes(currentProject.name);
-    // Simulated state: agent is considered in the state if assignedRoutes include locations for selectedState
-    const routeMatch = agent.assignedRoutes.some(
-      (r: string) => r.toLowerCase().includes(selectedState.toLowerCase())
-    );
-    // As we lack state data for agents, fallback: show if project is mapped to state
+    // Simulated state: agent is considered in the state if assignedRoutes include locations for any selected state
+    const routeMatch =
+      selectedStates.length === 0
+        ? true // no state filter
+        : agent.assignedRoutes.some(
+            (r: string) =>
+              selectedStates.some((state) => r.toLowerCase().includes(state.toLowerCase()))
+          );
+    // As we lack state data for agents, fallback: show if project is mapped to any selected state
     const projectStates = getProjectStates(currentProject.name);
-    return agentInProject && (routeMatch || projectStates.includes(selectedState));
+    const mappedState =
+      selectedStates.length === 0
+        ? true
+        : selectedStates.some((s) => projectStates.includes(s));
+    return agentInProject && (routeMatch || mappedState);
   });
 
   const filteredAgents = projectAgents.filter(agent =>
@@ -167,7 +176,11 @@ const ServiceAgents = () => {
           <p className="text-muted-foreground">{currentProject.description}</p>
         </div>
         <div className="flex flex-col md:flex-row gap-4 md:items-end">
-          <StateSelector />
+          {/* State Filter below ProjectSelector, but inside same flex block */}
+          <div className="flex flex-col gap-1">
+            <ProjectSelector />
+            <StateSelector />
+          </div>
           <AddNewAgentForm onAgentAdded={handleAgentAdded} />
         </div>
       </div>
@@ -228,37 +241,25 @@ const ServiceAgents = () => {
           <ServiceAgentsAssignment
             agents={projectAgents}
             projectId={selectedProject}
-            currentState={selectedState}
           />
         </TabsContent>
 
         <TabsContent value="delivery">
-          <ServiceAgentsTracking
-            currentProject={currentProject}
-            currentState={selectedState}
-          />
+          <ServiceAgentsTracking />
         </TabsContent>
 
         <TabsContent value="analytics">
           <ServiceAgentsAnalytics
             agents={projectAgents}
-            currentProject={currentProject}
-            currentState={selectedState}
           />
         </TabsContent>
 
         <TabsContent value="service-pricing">
-          <ServicePriceSetting
-            currentProject={currentProject}
-            currentState={selectedState}
-          />
+          <ServicePriceSetting />
         </TabsContent>
 
         <TabsContent value="bank-details">
-          <BankDetails
-            currentProject={currentProject}
-            currentState={selectedState}
-          />
+          <BankDetails />
         </TabsContent>
       </Tabs>
 

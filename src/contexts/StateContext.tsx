@@ -2,8 +2,8 @@
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
 interface StateContextType {
-  selectedState: string;
-  setSelectedState: (state: string) => void;
+  selectedStates: string[];
+  setSelectedStates: (states: string[]) => void;
   states: string[];
 }
 
@@ -23,10 +23,10 @@ const defaultStates = [
 const StateContext = createContext<StateContextType | undefined>(undefined);
 
 export const StateProvider = ({ children }: { children: ReactNode }) => {
-  const [selectedState, setSelectedState] = useState(defaultStates[0]);
+  const [selectedStates, setSelectedStates] = useState<string[]>([]);
   const value = {
-    selectedState,
-    setSelectedState,
+    selectedStates,
+    setSelectedStates,
     states: defaultStates
   };
   return <StateContext.Provider value={value}>{children}</StateContext.Provider>;
