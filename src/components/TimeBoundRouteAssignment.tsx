@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,14 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { CalendarIcon, MapPin, Plus, Clock, Navigation, Edit, CheckCircle, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import NewRouteForm from './NewRouteForm';
-import { useProject } from '../contexts/ProjectContext';
 
 interface Agent {
   id: number;
   name: string;
   avatar: string;
   location: string;
-  state?: string;
 }
 
 interface RouteAssignment {
@@ -32,7 +30,6 @@ interface RouteAssignment {
   plannedStops: number;
   actualStops?: number;
   efficiency?: number;
-  state?: string;
 }
 
 interface TimeBoundRouteAssignmentProps {
@@ -41,7 +38,6 @@ interface TimeBoundRouteAssignmentProps {
 }
 
 const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmentProps) => {
-  const { filters } = useProject();
   const [assignments, setAssignments] = useState<RouteAssignment[]>([
     {
       id: '1',
@@ -60,8 +56,7 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
       notes: 'Focus on high-priority clients',
       plannedStops: 3,
       actualStops: 3,
-      efficiency: 95,
-      state: 'New York'
+      efficiency: 95
     },
     {
       id: '2',
@@ -79,47 +74,11 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
       notes: 'Client meetings scheduled',
       plannedStops: 2,
       actualStops: 2,
-      efficiency: 100,
-      state: 'California'
-    },
-    {
-      id: '3',
-      agentId: 3,
-      agentName: 'Mike Davis',
-      routeName: 'Chicago Loop',
-      visitDate: new Date('2024-06-17'),
-      startTime: '10:00',
-      endTime: '18:00',
-      status: 'in-progress',
-      coordinates: [
-        { lat: 41.8781, lng: -87.6298, address: '233 S Wacker Dr, Chicago, IL 60606' }
-      ],
-      notes: 'Downtown area coverage',
-      plannedStops: 4,
-      actualStops: 2,
-      efficiency: 85,
-      state: 'Illinois'
+      efficiency: 100
     }
   ]);
 
   const [showNewRouteForm, setShowNewRouteForm] = useState(false);
-
-  // Filter assignments based on global filters
-  const filteredAssignments = useMemo(() => {
-    return assignments.filter(assignment => {
-      // Filter by agents that are already filtered by project and state
-      const agentExists = agents.some(agent => agent.id === assignment.agentId);
-      if (!agentExists) return false;
-      
-      // Additional state filter for assignments
-      if (filters.state !== 'all') {
-        const matchesState = assignment.state === filters.state;
-        if (!matchesState) return false;
-      }
-      
-      return true;
-    });
-  }, [assignments, agents, filters.state]);
 
   const getStatusBadge = (status: string) => {
     const variants = {
@@ -143,6 +102,10 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
     }
   };
 
+  const filteredAssignments = assignments.filter(assignment => 
+    agents.some(agent => agent.id === assignment.agentId)
+  );
+
   if (showNewRouteForm) {
     return (
       <NewRouteForm
@@ -159,11 +122,6 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
         <div>
           <h3 className="text-lg font-semibold">Time-bound Route Assignments</h3>
           <p className="text-sm text-muted-foreground">Schedule agent visits with specific dates, times, and performance tracking</p>
-          {filters.state !== 'all' && (
-            <Badge variant="outline" className="mt-2 bg-green-50 text-green-700">
-              Filtered by: {filters.state}
-            </Badge>
-          )}
         </div>
         <Button 
           className="bg-blue-600 hover:bg-blue-700"
@@ -182,9 +140,6 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Routes</p>
                 <p className="text-2xl font-bold text-blue-600">{filteredAssignments.length}</p>
-                {filters.state !== 'all' && (
-                  <p className="text-xs text-gray-500">in {filters.state}</p>
-                )}
               </div>
               <Navigation className="h-8 w-8 text-blue-600" />
             </div>
@@ -225,11 +180,10 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
               <div>
                 <p className="text-sm font-medium text-gray-600">Avg Efficiency</p>
                 <p className="text-2xl font-bold text-purple-600">
-                  {filteredAssignments.filter(a => a.efficiency).length > 0 ? 
-                    Math.round(filteredAssignments
-                      .filter(a => a.efficiency)
-                      .reduce((sum, a) => sum + (a.efficiency || 0), 0) / 
-                      filteredAssignments.filter(a => a.efficiency).length) : 0}%
+                  {Math.round(filteredAssignments
+                    .filter(a => a.efficiency)
+                    .reduce((sum, a) => sum + (a.efficiency || 0), 0) / 
+                    filteredAssignments.filter(a => a.efficiency).length)}%
                 </p>
               </div>
               <AlertCircle className="h-8 w-8 text-purple-600" />
@@ -245,7 +199,6 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
               <TableRow>
                 <TableHead>Agent</TableHead>
                 <TableHead>Route</TableHead>
-                <TableHead>State</TableHead>
                 <TableHead>Date & Time</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Progress</TableHead>
@@ -272,11 +225,6 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
                       <Navigation className="h-4 w-4 text-blue-600" />
                       <span>{assignment.routeName}</span>
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="text-xs">
-                      {assignment.state}
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="space-y-1">
@@ -323,20 +271,6 @@ const TimeBoundRouteAssignment = ({ agents, projectId }: TimeBoundRouteAssignmen
           </Table>
         </CardContent>
       </Card>
-
-      {filteredAssignments.length === 0 && (
-        <Card>
-          <CardContent className="p-12 text-center">
-            <Navigation className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No assignments found</h3>
-            <p className="text-gray-600">
-              No assignments match the current filters.
-              {filters.state !== 'all' && ` Try selecting a different state or `}
-              Create a new route assignment to get started.
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 };
