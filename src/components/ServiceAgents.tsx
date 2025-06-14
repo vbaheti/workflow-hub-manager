@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Route, BarChart3, Truck } from 'lucide-react';
+import { Users, Route, BarChart3, Truck, DollarSign, Building2 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import AddNewAgentForm from './AddNewAgentForm';
 import ViewAgentModal from './ViewAgentModal';
@@ -11,6 +12,8 @@ import ServiceAgentsManagement from './ServiceAgentsManagement';
 import ServiceAgentsAssignment from './ServiceAgentsAssignment';
 import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
+import ServicePriceSetting from './ServicePriceSetting';
+import BankDetails from './BankDetails';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -147,7 +150,7 @@ const ServiceAgents = () => {
       </div>
 
       <Tabs defaultValue="agents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="agents" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Agents
@@ -163,6 +166,14 @@ const ServiceAgents = () => {
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
             Analytics
+          </TabsTrigger>
+          <TabsTrigger value="service-pricing" className="flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Service Pricing
+          </TabsTrigger>
+          <TabsTrigger value="bank-details" className="flex items-center gap-2">
+            <Building2 className="h-4 w-4" />
+            Bank Details
           </TabsTrigger>
         </TabsList>
 
@@ -201,6 +212,14 @@ const ServiceAgents = () => {
         <TabsContent value="analytics">
           <ServiceAgentsAnalytics agents={projectAgents} />
         </TabsContent>
+
+        <TabsContent value="service-pricing">
+          <ServicePriceSetting />
+        </TabsContent>
+
+        <TabsContent value="bank-details">
+          <BankDetails />
+        </TabsContent>
       </Tabs>
 
       {/* MODALS */}
@@ -229,3 +248,4 @@ const ServiceAgents = () => {
 };
 
 export default ServiceAgents;
+
