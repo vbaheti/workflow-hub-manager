@@ -1,10 +1,10 @@
-
 import React from 'react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Users, DollarSign, FileText, CheckCircle, Building, Settings, Home, UserCheck, Wallet, CreditCard, LayoutDashboard, TrendingUp, Receipt } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useProject } from '../contexts/ProjectContext';
+import ProjectSelector from './ProjectSelector';
+import StateSelector from './StateSelector';
 
 const menuItems = [
   {
@@ -74,27 +74,13 @@ function AppSidebar() {
         <h2 className="text-lg font-semibold text-primary">Agent Portal</h2>
         <p className="text-sm text-muted-foreground">Service Management System</p>
         
-        <div className="mt-4">
-          <label className="text-sm font-medium text-gray-700 mb-2 block">Select Project</label>
-          <Select value={selectedProject} onValueChange={setSelectedProject}>
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a project" />
-            </SelectTrigger>
-            <SelectContent>
-              {projects.map((project) => (
-                <SelectItem key={project.id} value={project.id}>
-                  {project.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {currentProject && (
-            <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-              <p className="font-medium">{currentProject.description}</p>
-              <p className="text-gray-600">{currentProject.agentCount} agents • {currentProject.routeCount} routes</p>
-            </div>
-          )}
+        <div className="mt-4 space-y-3">
+          <ProjectSelector
+            selectedProject={selectedProject}
+            onProjectChange={setSelectedProject}
+            projects={projects}
+          />
+          <StateSelector />
         </div>
       </SidebarHeader>
       <SidebarContent>

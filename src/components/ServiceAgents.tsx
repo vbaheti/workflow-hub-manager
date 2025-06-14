@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Route, BarChart3, Truck, DollarSign, Building2 } from 'lucide-react';
@@ -14,6 +13,7 @@ import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 import ServicePriceSetting from './ServicePriceSetting';
 import BankDetails from './BankDetails';
+import { useStateContext } from "../contexts/StateContext";
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -23,6 +23,7 @@ const ServiceAgents = () => {
   const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
   const { selectedProject, currentProject } = useProject();
+  const { selectedStates } = useStateContext();
 
   const allAgents = [
     {
@@ -111,10 +112,36 @@ const ServiceAgents = () => {
     }
   ];
 
-  // Filter agents based on selected project
+  // Helper: return the state name a project is "assigned to" (simulate for demo)
+  function getProjectStates(projectName: string): string[] {
+    // Simple mock mapping for demonstration.
+    if (projectName.toLowerCase().includes("delhi")) return ["Delhi"];
+    if (projectName.toLowerCase().includes("mumbai")) return ["Maharashtra"];
+    if (projectName.toLowerCase().includes("bangalore") || projectName.toLowerCase().includes("karnataka")) return ["Karnataka"];
+    if (projectName.toLowerCase().includes("dhaka")) return ["West Bengal"];
+    if (projectName.toLowerCase().includes("dubai") || projectName.toLowerCase().includes("uae")) return ["Rajasthan"];
+    return ["Delhi", "Maharashtra", "West Bengal"];
+  }
+
+  // Filter agents based on selected project and MULTIPLE states
   const projectAgents = allAgents.filter(agent => {
     if (!currentProject) return false;
-    return agent.projects.includes(currentProject.name);
+    const agentInProject = agent.projects.includes(currentProject.name);
+    // Simulated state: agent is considered in the state if assignedRoutes include locations for any selected state
+    const routeMatch =
+      selectedStates.length === 0
+        ? true // no state filter
+        : agent.assignedRoutes.some(
+            (r: string) =>
+              selectedStates.some((state) => r.toLowerCase().includes(state.toLowerCase()))
+          );
+    // As we lack state data for agents, fallback: show if project is mapped to any selected state
+    const projectStates = getProjectStates(currentProject.name);
+    const mappedState =
+      selectedStates.length === 0
+        ? true
+        : selectedStates.some((s) => projectStates.includes(s));
+    return agentInProject && (routeMatch || mappedState);
   });
 
   const filteredAgents = projectAgents.filter(agent =>
@@ -141,12 +168,14 @@ const ServiceAgents = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col md:flex-row justify-between items-center gap-5">
         <div>
           <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
           <p className="text-muted-foreground">{currentProject.description}</p>
         </div>
-        <AddNewAgentForm onAgentAdded={handleAgentAdded} />
+        <div className="flex flex-col md:flex-row gap-4 md:items-end">
+          <AddNewAgentForm onAgentAdded={handleAgentAdded} />
+        </div>
       </div>
 
       <Tabs defaultValue="agents" className="space-y-6">
@@ -202,7 +231,10 @@ const ServiceAgents = () => {
         </TabsContent>
 
         <TabsContent value="assignment">
-          <ServiceAgentsAssignment agents={projectAgents} projectId={selectedProject} />
+          <ServiceAgentsAssignment
+            agents={projectAgents}
+            projectId={selectedProject}
+          />
         </TabsContent>
 
         <TabsContent value="delivery">
@@ -210,7 +242,9 @@ const ServiceAgents = () => {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <ServiceAgentsAnalytics agents={projectAgents} />
+          <ServiceAgentsAnalytics
+            agents={projectAgents}
+          />
         </TabsContent>
 
         <TabsContent value="service-pricing">
@@ -248,4 +282,3 @@ const ServiceAgents = () => {
 };
 
 export default ServiceAgents;
-
