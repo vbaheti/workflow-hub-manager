@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +9,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CalendarIcon, Plus, MapPin, Trash2, Clock } from 'lucide-react';
+import { CalendarIcon, Plus, MapPin, Trash2, Clock, Map } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +21,7 @@ interface Stop {
   duration: number;
   priority: 'high' | 'medium' | 'low';
   notes: string;
+  coordinates?: { lat: number; lng: number };
 }
 
 interface Agent {
@@ -53,7 +55,128 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
     notes: ''
   });
 
+  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
+  const [mapApiKey, setMapApiKey] = useState('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState(true);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const googleMapRef = useRef<google.maps.Map | null>(null);
+  const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
+  const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (mapApiKey && mapRef.current) {
+      loadGoogleMapsScript();
+    }
+  }, [mapApiKey]);
+
+  const loadGoogleMapsScript = () => {
+    if (window.google) {
+      initializeMap();
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${mapApiKey}&libraries=places`;
+    script.onload = initializeMap;
+    document.head.appendChild(script);
+  };
+
+  const initializeMap = () => {
+    if (!mapRef.current) return;
+
+    googleMapRef.current = new google.maps.Map(mapRef.current, {
+      center: { lat: 40.7128, lng: -74.0060 }, // Default to NYC
+      zoom: 13,
+    });
+
+    directionsServiceRef.current = new google.maps.DirectionsService();
+    directionsRendererRef.current = new google.maps.DirectionsRenderer({
+      draggable: true,
+    });
+
+    directionsRendererRef.current.setMap(googleMapRef.current);
+
+    // Add click listener to add stops
+    googleMapRef.current.addListener('click', (event: google.maps.MapMouseEvent) => {
+      if (event.latLng) {
+        addStopFromMap(event.latLng);
+      }
+    });
+  };
+
+  const addStopFromMap = async (latLng: google.maps.LatLng) => {
+    const geocoder = new google.maps.Geocoder();
+    
+    try {
+      const response = await geocoder.geocode({ location: latLng });
+      if (response.results[0]) {
+        const address = response.results[0].formatted_address;
+        
+        const stop: Stop = {
+          id: Date.now().toString(),
+          address,
+          expectedTime: '09:00',
+          duration: 30,
+          priority: 'medium',
+          notes: '',
+          coordinates: {
+            lat: latLng.lat(),
+            lng: latLng.lng()
+          }
+        };
+
+        setStops(prev => [...prev, stop]);
+        updateRouteDisplay();
+        
+        toast({
+          title: "Stop Added",
+          description: `Added stop at ${address}`,
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Could not get address for this location",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const updateRouteDisplay = () => {
+    if (!directionsServiceRef.current || !directionsRendererRef.current || stops.length < 2) {
+      return;
+    }
+
+    const waypoints = stops.slice(1, -1).map(stop => ({
+      location: stop.coordinates ? 
+        new google.maps.LatLng(stop.coordinates.lat, stop.coordinates.lng) : 
+        stop.address,
+      stopover: true,
+    }));
+
+    const request: google.maps.DirectionsRequest = {
+      origin: stops[0].coordinates ? 
+        new google.maps.LatLng(stops[0].coordinates.lat, stops[0].coordinates.lng) : 
+        stops[0].address,
+      destination: stops[stops.length - 1].coordinates ? 
+        new google.maps.LatLng(stops[stops.length - 1].coordinates.lat, stops[stops.length - 1].coordinates.lng) : 
+        stops[stops.length - 1].address,
+      waypoints,
+      travelMode: google.maps.TravelMode.DRIVING,
+    };
+
+    directionsServiceRef.current.route(request, (result, status) => {
+      if (status === 'OK' && result) {
+        directionsRendererRef.current?.setDirections(result);
+      }
+    });
+  };
+
+  useEffect(() => {
+    updateRouteDisplay();
+  }, [stops]);
 
   const addStop = () => {
     if (!newStop.address || !newStop.expectedTime) {
@@ -84,45 +207,60 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
     setStops(stops.filter(stop => stop.id !== stopId));
   };
 
+  const handleDateSelect = (date: Date | undefined) => {
+    if (!date) return;
+    
+    const dateString = format(date, 'yyyy-MM-dd');
+    const exists = selectedDates.some(d => format(d, 'yyyy-MM-dd') === dateString);
+    
+    if (exists) {
+      setSelectedDates(selectedDates.filter(d => format(d, 'yyyy-MM-dd') !== dateString));
+    } else {
+      setSelectedDates([...selectedDates, date]);
+    }
+  };
+
   const handleSubmit = () => {
-    if (!formData.routeName || !formData.agentId || !formData.startDate || !formData.endDate || stops.length === 0) {
+    if (!formData.routeName || !formData.agentId || selectedDates.length === 0 || stops.length === 0) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields and add at least one stop.",
+        description: "Please fill in all required fields, select at least one date, and add at least one stop.",
         variant: "destructive"
       });
       return;
     }
 
     // Check for conflicts if onConflictCheck is provided
-    if (onConflictCheck && formData.startDate && formData.endDate) {
-      const hasConflict = onConflictCheck(
-        parseInt(formData.agentId), 
-        '09:00', // You might want to add time fields to the form
-        '17:00', 
-        formData.startDate
-      );
-      
-      if (hasConflict) {
-        toast({
-          title: "Schedule Conflict",
-          description: "This assignment conflicts with existing schedules.",
-          variant: "destructive"
-        });
-        return;
+    if (onConflictCheck) {
+      for (const date of selectedDates) {
+        const hasConflict = onConflictCheck(
+          parseInt(formData.agentId), 
+          '09:00',
+          '17:00', 
+          date
+        );
+        
+        if (hasConflict) {
+          toast({
+            title: "Schedule Conflict",
+            description: `Conflict detected for ${format(date, 'PPP')}`,
+            variant: "destructive"
+          });
+          return;
+        }
       }
     }
 
-    // Here you would typically save the route to your backend
     console.log('Creating route:', {
       ...formData,
       projectId,
-      stops
+      stops,
+      selectedDates
     });
 
     toast({
       title: "Success",
-      description: "Route created successfully.",
+      description: `Route created for ${selectedDates.length} date(s).`,
     });
 
     onRouteCreated();
@@ -136,6 +274,47 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (showApiKeyInput) {
+    return (
+      <Card className="max-w-md mx-auto">
+        <CardHeader>
+          <CardTitle>Google Maps Setup</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="apiKey">Google Maps API Key</Label>
+            <Input
+              id="apiKey"
+              type="password"
+              value={mapApiKey}
+              onChange={(e) => setMapApiKey(e.target.value)}
+              placeholder="Enter your Google Maps API key"
+            />
+          </div>
+          <Button 
+            onClick={() => {
+              if (mapApiKey) {
+                setShowApiKeyInput(false);
+              } else {
+                toast({
+                  title: "Error",
+                  description: "Please enter a valid API key",
+                  variant: "destructive"
+                });
+              }
+            }}
+            className="w-full"
+          >
+            Continue
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Get your API key from the Google Cloud Console and enable the Maps JavaScript API and Places API.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -170,58 +349,48 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label>Start Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.startDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.startDate ? format(formData.startDate, "PPP") : <span>Pick start date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.startDate}
-                    onSelect={(date) => setFormData(prev => ({ ...prev, startDate: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div className="space-y-2">
-              <Label>End Date *</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !formData.endDate && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {formData.endDate ? format(formData.endDate, "PPP") : <span>Pick end date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={formData.endDate}
-                    onSelect={(date) => setFormData(prev => ({ ...prev, endDate: date }))}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+          <div className="space-y-2">
+            <Label>Select Multiple Dates *</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {selectedDates.length === 0 ? (
+                    <span>Select dates</span>
+                  ) : (
+                    <span>{selectedDates.length} date(s) selected</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="single"
+                  onSelect={handleDateSelect}
+                  initialFocus
+                  className="p-3 pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+            {selectedDates.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedDates.map((date, index) => (
+                  <Badge key={index} variant="outline" className="flex items-center gap-1">
+                    {format(date, 'MMM dd, yyyy')}
+                    <button
+                      onClick={() => setSelectedDates(selectedDates.filter((_, i) => i !== index))}
+                      className="ml-1 text-xs"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -231,6 +400,27 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
               value={formData.description}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Route description or special instructions"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Map className="h-5 w-5" />
+            Interactive Route Map
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Click on the map to add stops to your route. The route will be automatically calculated and displayed.
+            </p>
+            <div 
+              ref={mapRef} 
+              className="w-full h-96 border rounded-lg"
+              style={{ minHeight: '400px' }}
             />
           </div>
         </CardContent>
@@ -307,6 +497,7 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Order</TableHead>
                   <TableHead>Address</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead>Duration</TableHead>
@@ -316,12 +507,15 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {stops.map((stop) => (
+                {stops.map((stop, index) => (
                   <TableRow key={stop.id}>
+                    <TableCell>
+                      <Badge variant="outline">{index + 1}</Badge>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <MapPin className="h-4 w-4 text-blue-600" />
-                        <span>{stop.address}</span>
+                        <span className="truncate max-w-xs">{stop.address}</span>
                       </div>
                     </TableCell>
                     <TableCell>
@@ -336,7 +530,7 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
                         {stop.priority}
                       </Badge>
                     </TableCell>
-                    <TableCell>{stop.notes || '-'}</TableCell>
+                    <TableCell className="truncate max-w-xs">{stop.notes || '-'}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm" onClick={() => removeStop(stop.id)}>
                         <Trash2 className="h-4 w-4" />
@@ -355,7 +549,7 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
           Cancel
         </Button>
         <Button onClick={handleSubmit}>
-          Create Route
+          Create Route for {selectedDates.length} Date(s)
         </Button>
       </div>
     </div>
