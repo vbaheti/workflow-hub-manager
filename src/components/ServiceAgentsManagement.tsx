@@ -8,6 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, MoreHorizontal, Search } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { usePermissions } from '../hooks/usePermissions';
+import { RESOURCES, ACTIONS } from '../types/rbac';
+import { ProtectedComponent } from './ProtectedComponent';
 
 type Agent = any;
 
@@ -30,6 +33,8 @@ const ServiceAgentsManagement: React.FC<ServiceAgentsManagementProps> = ({
   onAssign,
   onPerformance
 }) => {
+  const { hasPermission } = usePermissions();
+
   const getStatusBadge = (status: string) => {
     return status === 'active' ? 
       <Badge className="bg-green-100 text-green-800">Active</Badge> :
@@ -71,7 +76,9 @@ const ServiceAgentsManagement: React.FC<ServiceAgentsManagementProps> = ({
               <TableHead>Routes</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Performance</TableHead>
-              <TableHead>Collections</TableHead>
+              <ProtectedComponent resource={RESOURCES.FINANCIAL_DATA} action={ACTIONS.VIEW} fallback={null}>
+                <TableHead>Collections</TableHead>
+              </ProtectedComponent>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -130,7 +137,9 @@ const ServiceAgentsManagement: React.FC<ServiceAgentsManagementProps> = ({
                 </TableCell>
                 <TableCell>{getStatusBadge(agent.status)}</TableCell>
                 <TableCell>{getPerformanceBadge(agent.performance)}</TableCell>
-                <TableCell className="font-semibold">{agent.totalCollections}</TableCell>
+                <ProtectedComponent resource={RESOURCES.FINANCIAL_DATA} action={ACTIONS.VIEW} fallback={null}>
+                  <TableCell className="font-semibold">{agent.totalCollections}</TableCell>
+                </ProtectedComponent>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -140,10 +149,22 @@ const ServiceAgentsManagement: React.FC<ServiceAgentsManagementProps> = ({
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => onView(agent)}>View Details</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEdit(agent)}>Edit Agent</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onAssign(agent)}>Assign Routes</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onPerformance(agent)}>View Performance</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
+                      
+                      {hasPermission(RESOURCES.AGENT_MANAGEMENT, ACTIONS.EDIT) && (
+                        <DropdownMenuItem onClick={() => onEdit(agent)}>Edit Agent</DropdownMenuItem>
+                      )}
+                      
+                      {hasPermission(RESOURCES.AGENT_ASSIGNMENT, ACTIONS.ASSIGN) && (
+                        <DropdownMenuItem onClick={() => onAssign(agent)}>Assign Routes</DropdownMenuItem>
+                      )}
+                      
+                      {hasPermission(RESOURCES.AGENT_ANALYTICS, ACTIONS.VIEW) && (
+                        <DropdownMenuItem onClick={() => onPerformance(agent)}>View Performance</DropdownMenuItem>
+                      )}
+                      
+                      {hasPermission(RESOURCES.AGENT_MANAGEMENT, ACTIONS.DELETE) && (
+                        <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

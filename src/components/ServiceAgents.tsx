@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Route, BarChart3, Truck, DollarSign, Building2 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
+import { useStateContext } from "../contexts/StateContext";
+import { usePermissions } from '../hooks/usePermissions';
+import { RESOURCES } from '../types/rbac';
+import { ProtectedComponent } from './ProtectedComponent';
 import AddNewAgentForm from './AddNewAgentForm';
 import ViewAgentModal from './ViewAgentModal';
 import EditAgentModal from "./EditAgentModal";
@@ -13,7 +17,6 @@ import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 import ServicePriceSetting from './ServicePriceSetting';
 import BankDetails from './BankDetails';
-import { useStateContext } from "../contexts/StateContext";
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -24,6 +27,7 @@ const ServiceAgents = () => {
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
   const { selectedProject, currentProject } = useProject();
   const { selectedStates } = useStateContext();
+  const { canAccess, canCreate } = usePermissions();
 
   const allAgents = [
     {
@@ -166,6 +170,15 @@ const ServiceAgents = () => {
     );
   }
 
+  // Check if user can access any agent features
+  if (!canAccess(RESOURCES.AGENTS)) {
+    return (
+      <ProtectedComponent resource={RESOURCES.AGENTS} action="view">
+        <div />
+      </ProtectedComponent>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-center gap-5">
@@ -174,86 +187,117 @@ const ServiceAgents = () => {
           <p className="text-muted-foreground">{currentProject.description}</p>
         </div>
         <div className="flex flex-col md:flex-row gap-4 md:items-end">
-          <AddNewAgentForm onAgentAdded={handleAgentAdded} />
+          <ProtectedComponent resource={RESOURCES.AGENT_MANAGEMENT} action="create">
+            <AddNewAgentForm onAgentAdded={handleAgentAdded} />
+          </ProtectedComponent>
         </div>
       </div>
 
       <Tabs defaultValue="agents" className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="agents" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Agents
-          </TabsTrigger>
-          <TabsTrigger value="assignment" className="flex items-center gap-2">
-            <Route className="h-4 w-4" />
-            Assignment & Scheduling
-          </TabsTrigger>
-          <TabsTrigger value="delivery" className="flex items-center gap-2">
-            <Truck className="h-4 w-4" />
-            Service Tracking
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="service-pricing" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Service Pricing
-          </TabsTrigger>
-          <TabsTrigger value="bank-details" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Bank Details
-          </TabsTrigger>
+          <ProtectedComponent resource={RESOURCES.AGENT_MANAGEMENT} action="view">
+            <TabsTrigger value="agents" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Agents
+            </TabsTrigger>
+          </ProtectedComponent>
+          
+          <ProtectedComponent resource={RESOURCES.AGENT_ASSIGNMENT} action="view">
+            <TabsTrigger value="assignment" className="flex items-center gap-2">
+              <Route className="h-4 w-4" />
+              Assignment & Scheduling
+            </TabsTrigger>
+          </ProtectedComponent>
+          
+          <ProtectedComponent resource={RESOURCES.AGENT_TRACKING} action="view">
+            <TabsTrigger value="delivery" className="flex items-center gap-2">
+              <Truck className="h-4 w-4" />
+              Service Tracking
+            </TabsTrigger>
+          </ProtectedComponent>
+          
+          <ProtectedComponent resource={RESOURCES.AGENT_ANALYTICS} action="view">
+            <TabsTrigger value="analytics" className="flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" />
+              Analytics
+            </TabsTrigger>
+          </ProtectedComponent>
+          
+          <ProtectedComponent resource={RESOURCES.SERVICE_PRICING} action="view">
+            <TabsTrigger value="service-pricing" className="flex items-center gap-2">
+              <DollarSign className="h-4 w-4" />
+              Service Pricing
+            </TabsTrigger>
+          </ProtectedComponent>
+          
+          <ProtectedComponent resource={RESOURCES.BANK_DETAILS} action="view">
+            <TabsTrigger value="bank-details" className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Bank Details
+            </TabsTrigger>
+          </ProtectedComponent>
         </TabsList>
 
-        <TabsContent value="agents">
-          <ServiceAgentsManagement
-            agents={filteredAgents}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onView={agent => {
-              setSelectedAgent(agent);
-              setViewModalOpen(true);
-            }}
-            onEdit={agent => {
-              setSelectedAgent(agent);
-              setEditModalOpen(true);
-            }}
-            onAssign={agent => {
-              setSelectedAgent(agent);
-              setAssignRoutesModalOpen(true);
-            }}
-            onPerformance={agent => {
-              setSelectedAgent(agent);
-              setPerformanceModalOpen(true);
-            }}
-          />
-        </TabsContent>
+        <ProtectedComponent resource={RESOURCES.AGENT_MANAGEMENT} action="view">
+          <TabsContent value="agents">
+            <ServiceAgentsManagement
+              agents={filteredAgents}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              onView={agent => {
+                setSelectedAgent(agent);
+                setViewModalOpen(true);
+              }}
+              onEdit={agent => {
+                setSelectedAgent(agent);
+                setEditModalOpen(true);
+              }}
+              onAssign={agent => {
+                setSelectedAgent(agent);
+                setAssignRoutesModalOpen(true);
+              }}
+              onPerformance={agent => {
+                setSelectedAgent(agent);
+                setPerformanceModalOpen(true);
+              }}
+            />
+          </TabsContent>
+        </ProtectedComponent>
 
-        <TabsContent value="assignment">
-          <ServiceAgentsAssignment
-            agents={projectAgents}
-            projectId={selectedProject}
-          />
-        </TabsContent>
+        <ProtectedComponent resource={RESOURCES.AGENT_ASSIGNMENT} action="view">
+          <TabsContent value="assignment">
+            <ServiceAgentsAssignment
+              agents={projectAgents}
+              projectId={selectedProject}
+            />
+          </TabsContent>
+        </ProtectedComponent>
 
-        <TabsContent value="delivery">
-          <ServiceAgentsTracking />
-        </TabsContent>
+        <ProtectedComponent resource={RESOURCES.AGENT_TRACKING} action="view">
+          <TabsContent value="delivery">
+            <ServiceAgentsTracking />
+          </TabsContent>
+        </ProtectedComponent>
 
-        <TabsContent value="analytics">
-          <ServiceAgentsAnalytics
-            agents={projectAgents}
-          />
-        </TabsContent>
+        <ProtectedComponent resource={RESOURCES.AGENT_ANALYTICS} action="view">
+          <TabsContent value="analytics">
+            <ServiceAgentsAnalytics
+              agents={projectAgents}
+            />
+          </TabsContent>
+        </ProtectedComponent>
 
-        <TabsContent value="service-pricing">
-          <ServicePriceSetting />
-        </TabsContent>
+        <ProtectedComponent resource={RESOURCES.SERVICE_PRICING} action="view">
+          <TabsContent value="service-pricing">
+            <ServicePriceSetting />
+          </TabsContent>
+        </ProtectedComponent>
 
-        <TabsContent value="bank-details">
-          <BankDetails />
-        </TabsContent>
+        <ProtectedComponent resource={RESOURCES.BANK_DETAILS} action="view">
+          <TabsContent value="bank-details">
+            <BankDetails />
+          </TabsContent>
+        </ProtectedComponent>
       </Tabs>
 
       {/* MODALS */}
