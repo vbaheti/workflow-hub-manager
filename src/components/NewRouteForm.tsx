@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,9 +32,10 @@ interface NewRouteFormProps {
   agents: Agent[];
   projectId: string;
   onRouteCreated: () => void;
+  onConflictCheck?: (agentId: number, startTime: string, endTime: string, date: Date) => boolean;
 }
 
-const NewRouteForm = ({ agents, projectId, onRouteCreated }: NewRouteFormProps) => {
+const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: NewRouteFormProps) => {
   const [formData, setFormData] = useState({
     routeName: '',
     agentId: '',
@@ -92,6 +92,25 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated }: NewRouteFormProps) 
         variant: "destructive"
       });
       return;
+    }
+
+    // Check for conflicts if onConflictCheck is provided
+    if (onConflictCheck && formData.startDate && formData.endDate) {
+      const hasConflict = onConflictCheck(
+        parseInt(formData.agentId), 
+        '09:00', // You might want to add time fields to the form
+        '17:00', 
+        formData.startDate
+      );
+      
+      if (hasConflict) {
+        toast({
+          title: "Schedule Conflict",
+          description: "This assignment conflicts with existing schedules.",
+          variant: "destructive"
+        });
+        return;
+      }
     }
 
     // Here you would typically save the route to your backend
