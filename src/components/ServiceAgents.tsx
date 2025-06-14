@@ -169,18 +169,14 @@ const ServiceAgents = () => {
       </div>
 
       <Tabs defaultValue="agents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="agents" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Agents
           </TabsTrigger>
-          <TabsTrigger value="routes" className="flex items-center gap-2">
+          <TabsTrigger value="assignment" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
-            Route Assignment
-          </TabsTrigger>
-          <TabsTrigger value="schedule" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Schedule Routes
+            Assignment & Scheduling
           </TabsTrigger>
           <TabsTrigger value="delivery" className="flex items-center gap-2">
             <Truck className="h-4 w-4" />
@@ -332,12 +328,15 @@ const ServiceAgents = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="routes">
-          <RouteAssignment agents={projectAgents} />
-        </TabsContent>
-
-        <TabsContent value="schedule">
-          <TimeBoundRouteAssignment agents={projectAgents} projectId={selectedProject} />
+        <TabsContent value="assignment">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+              <RouteAssignment agents={projectAgents} />
+            </div>
+            <div>
+              <TimeBoundRouteAssignment agents={projectAgents} projectId={selectedProject} />
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="delivery">
