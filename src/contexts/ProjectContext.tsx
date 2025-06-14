@@ -8,13 +8,24 @@ interface Project {
   agentCount: number;
   routeCount: number;
   description: string;
+  states?: string[];
 }
 
 interface ProjectContextType {
   selectedProject: string;
   setSelectedProject: (projectId: string) => void;
+  selectedState: string;
+  setSelectedState: (state: string) => void;
+  selectedPeriod: string;
+  setSelectedPeriod: (period: string) => void;
   projects: Project[];
   currentProject: Project | undefined;
+  availableStates: string[];
+  filters: {
+    project: string;
+    state: string;
+    period: string;
+  };
 }
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -26,7 +37,8 @@ const defaultProjects: Project[] = [
     status: 'active',
     agentCount: 3,
     routeCount: 5,
-    description: 'Manhattan and Brooklyn field operations'
+    description: 'Manhattan and Brooklyn field operations',
+    states: ['New York', 'Connecticut']
   },
   {
     id: 'project-beta',
@@ -34,7 +46,8 @@ const defaultProjects: Project[] = [
     status: 'active',
     agentCount: 2,
     routeCount: 4,
-    description: 'West Coast expansion initiative'
+    description: 'West Coast expansion initiative',
+    states: ['California', 'Nevada', 'Oregon']
   },
   {
     id: 'project-gamma',
@@ -42,7 +55,8 @@ const defaultProjects: Project[] = [
     status: 'on-hold',
     agentCount: 1,
     routeCount: 2,
-    description: 'Chicago market research'
+    description: 'Chicago market research',
+    states: ['Illinois', 'Wisconsin']
   }
 ];
 
@@ -52,14 +66,29 @@ interface ProjectProviderProps {
 
 export const ProjectProvider = ({ children }: ProjectProviderProps) => {
   const [selectedProject, setSelectedProject] = useState('project-alpha');
+  const [selectedState, setSelectedState] = useState('all');
+  const [selectedPeriod, setSelectedPeriod] = useState('last-30-days');
 
   const currentProject = defaultProjects.find(p => p.id === selectedProject);
+  const availableStates = currentProject?.states || [];
+
+  const filters = {
+    project: selectedProject,
+    state: selectedState,
+    period: selectedPeriod
+  };
 
   const value = {
     selectedProject,
     setSelectedProject,
+    selectedState,
+    setSelectedState,
+    selectedPeriod,
+    setSelectedPeriod,
     projects: defaultProjects,
-    currentProject
+    currentProject,
+    availableStates,
+    filters
   };
 
   return (

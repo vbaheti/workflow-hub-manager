@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +14,7 @@ import AgentAnalytics from './AgentAnalytics';
 import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
 import AddNewAgentForm from './AddNewAgentForm';
 import ServiceDeliveryTracking from './ServiceDeliveryTracking';
+import FilterBar from './FilterBar';
 import { useProject } from '../contexts/ProjectContext';
 import ViewAgentModal from "./ViewAgentModal";
 import EditAgentModal from "./EditAgentModal";
@@ -26,7 +28,7 @@ const ServiceAgents = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
-  const { selectedProject, currentProject } = useProject();
+  const { selectedProject, currentProject, filters } = useProject();
 
   const allAgents = [
     {
@@ -35,12 +37,13 @@ const ServiceAgents = () => {
       email: "rajesh.kumar@company.com",
       phone: "+91 98765 43210",
       location: "Delhi, India",
+      state: "New York",
       status: "active",
       performance: "excellent",
       joinDate: "2023-01-15",
       totalCollections: "₹4,52,000",
       assignedRoutes: ["Central Delhi", "Connaught Place"],
-      projects: ["Mumbai Financial Hub", "Delhi Service Network"],
+      projects: ["Project Alpha", "Project Beta"],
       avatar: ""
     },
     {
@@ -49,12 +52,13 @@ const ServiceAgents = () => {
       email: "priya.sharma@company.com",
       phone: "+91 87654 32109",
       location: "Mumbai, India",
+      state: "California",
       status: "active",
       performance: "good",
       joinDate: "2023-03-20",
       totalCollections: "₹3,89,000",
       assignedRoutes: ["Bandra West", "Andheri East"],
-      projects: ["Mumbai Financial Hub", "Bangalore Tech Corridor"],
+      projects: ["Project Beta", "Project Gamma"],
       avatar: ""
     },
     {
@@ -63,12 +67,13 @@ const ServiceAgents = () => {
       email: "ahmed.hassan@company.com",
       phone: "+880 1712 345678",
       location: "Dhaka, Bangladesh",
+      state: "Connecticut",
       status: "inactive",
       performance: "average",
       joinDate: "2022-11-10",
       totalCollections: "৳2,95,000",
       assignedRoutes: ["Gulshan District"],
-      projects: ["Dhaka Urban Services"],
+      projects: ["Project Alpha"],
       avatar: ""
     },
     {
@@ -77,12 +82,13 @@ const ServiceAgents = () => {
       email: "fatima.alzahra@company.com",
       phone: "+971 50 123 4567",
       location: "Dubai, UAE",
+      state: "Nevada",
       status: "active",
       performance: "excellent",
       joinDate: "2023-05-08",
       totalCollections: "AED 521,000",
       assignedRoutes: ["Business Bay", "DIFC"],
-      projects: ["UAE Business Services", "Dubai Financial District"],
+      projects: ["Project Beta"],
       avatar: ""
     },
     {
@@ -91,12 +97,13 @@ const ServiceAgents = () => {
       email: "chen.weiming@company.com",
       phone: "+65 8765 4321",
       location: "Singapore",
+      state: "Oregon",
       status: "active",
       performance: "good",
       joinDate: "2023-02-14",
       totalCollections: "S$418,000",
       assignedRoutes: ["Marina Bay", "Raffles Place"],
-      projects: ["Singapore Financial Hub", "Southeast Asia Expansion"],
+      projects: ["Project Beta"],
       avatar: ""
     },
     {
@@ -105,27 +112,43 @@ const ServiceAgents = () => {
       email: "amara.okafor@company.com",
       phone: "+234 803 123 4567",
       location: "Lagos, Nigeria",
+      state: "Illinois",
       status: "active",
       performance: "excellent",
       joinDate: "2023-04-12",
       totalCollections: "₦12,500,000",
       assignedRoutes: ["Victoria Island", "Ikoyi"],
-      projects: ["Lagos Commercial Hub", "West Africa Network"],
+      projects: ["Project Gamma"],
       avatar: ""
     }
   ];
 
-  // Filter agents based on selected project
-  const projectAgents = allAgents.filter(agent => {
-    if (!currentProject) return false;
-    return agent.projects.includes(currentProject.name);
-  });
-
-  const filteredAgents = projectAgents.filter(agent =>
-    agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter agents based on current project and state from global context
+  const filteredAgents = useMemo(() => {
+    return allAgents.filter(agent => {
+      if (!currentProject) return false;
+      
+      // Filter by project
+      const matchesProject = agent.projects.includes(currentProject.name);
+      if (!matchesProject) return false;
+      
+      // Filter by state if selected
+      if (filters.state !== 'all') {
+        const matchesState = agent.state === filters.state;
+        if (!matchesState) return false;
+      }
+      
+      // Filter by search term
+      if (searchTerm) {
+        const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             agent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                             agent.location.toLowerCase().includes(searchTerm.toLowerCase());
+        if (!matchesSearch) return false;
+      }
+      
+      return true;
+    });
+  }, [allAgents, currentProject, filters, searchTerm]);
 
   const getStatusBadge = (status: string) => {
     return status === 'active' ? 
@@ -152,7 +175,7 @@ const ServiceAgents = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
-          <p className="text-gray-600">Please select a project from the sidebar to view agents.</p>
+          <p className="text-gray-600">Please select a project from the filters to view agents.</p>
         </div>
       </div>
     );
@@ -160,10 +183,22 @@ const ServiceAgents = () => {
 
   return (
     <div className="space-y-6">
+      <FilterBar showStateFilter={true} showPeriodFilter={true} userRole="admin" />
+      
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
           <p className="text-muted-foreground">{currentProject.description}</p>
+          <div className="flex items-center gap-4 mt-2">
+            <Badge variant="outline">
+              {filteredAgents.length} agents in current filter
+            </Badge>
+            {filters.state !== 'all' && (
+              <Badge variant="outline" className="bg-green-50 text-green-700">
+                State: {filters.state}
+              </Badge>
+            )}
+          </div>
         </div>
         <AddNewAgentForm onAgentAdded={handleAgentAdded} />
       </div>
@@ -198,6 +233,7 @@ const ServiceAgents = () => {
               <CardTitle>Agent Management</CardTitle>
               <CardDescription>
                 Overview of agents in {currentProject.name}
+                {filters.state !== 'all' && ` - ${filters.state}`}
               </CardDescription>
               <div className="flex items-center space-x-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
@@ -216,7 +252,7 @@ const ServiceAgents = () => {
                     <TableHead>Agent</TableHead>
                     <TableHead>Contact</TableHead>
                     <TableHead>Location</TableHead>
-                    <TableHead>Projects</TableHead>
+                    <TableHead>State</TableHead>
                     <TableHead>Routes</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Performance</TableHead>
@@ -260,13 +296,9 @@ const ServiceAgents = () => {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {agent.projects.filter(project => project === currentProject.name).map((project, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {project}
-                            </Badge>
-                          ))}
-                        </div>
+                        <Badge variant="outline" className="text-xs">
+                          {agent.state}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
@@ -333,11 +365,11 @@ const ServiceAgents = () => {
         </TabsContent>
 
         <TabsContent value="routes">
-          <RouteAssignment agents={projectAgents} />
+          <RouteAssignment agents={filteredAgents} />
         </TabsContent>
 
         <TabsContent value="schedule">
-          <TimeBoundRouteAssignment agents={projectAgents} projectId={selectedProject} />
+          <TimeBoundRouteAssignment agents={filteredAgents} projectId={selectedProject} />
         </TabsContent>
 
         <TabsContent value="delivery">
@@ -345,7 +377,7 @@ const ServiceAgents = () => {
         </TabsContent>
 
         <TabsContent value="analytics">
-          <AgentAnalytics agents={projectAgents} />
+          <AgentAnalytics agents={filteredAgents} />
         </TabsContent>
       </Tabs>
 
