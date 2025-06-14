@@ -7,11 +7,13 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, UserPlus, Mail, Phone, MapPin, MoreHorizontal, Route, BarChart3, TrendingUp, Users, Calendar } from 'lucide-react';
+import { Search, Mail, Phone, MapPin, MoreHorizontal, Route, BarChart3, TrendingUp, Users, Calendar, Truck } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import RouteAssignment from './RouteAssignment';
 import AgentAnalytics from './AgentAnalytics';
 import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
+import AddNewAgentForm from './AddNewAgentForm';
+import ServiceDeliveryTracking from './ServiceDeliveryTracking';
 import { useProject } from '../contexts/ProjectContext';
 
 const ServiceAgents = () => {
@@ -132,6 +134,11 @@ const ServiceAgents = () => {
     return variants[performance as keyof typeof variants];
   };
 
+  const handleAgentAdded = (agent: any) => {
+    // In a real application, this would update the agents list
+    console.log('Agent added:', agent);
+  };
+
   if (!currentProject) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -150,14 +157,11 @@ const ServiceAgents = () => {
           <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
           <p className="text-muted-foreground">{currentProject.description}</p>
         </div>
-        <Button className="flex items-center gap-2">
-          <UserPlus className="h-4 w-4" />
-          Add New Agent
-        </Button>
+        <AddNewAgentForm onAgentAdded={handleAgentAdded} />
       </div>
 
       <Tabs defaultValue="agents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="agents" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
             Agents
@@ -169,6 +173,10 @@ const ServiceAgents = () => {
           <TabsTrigger value="schedule" className="flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Schedule Routes
+          </TabsTrigger>
+          <TabsTrigger value="delivery" className="flex items-center gap-2">
+            <Truck className="h-4 w-4" />
+            Service Tracking
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
@@ -294,6 +302,10 @@ const ServiceAgents = () => {
 
         <TabsContent value="schedule">
           <TimeBoundRouteAssignment agents={projectAgents} projectId={selectedProject} />
+        </TabsContent>
+
+        <TabsContent value="delivery">
+          <ServiceDeliveryTracking />
         </TabsContent>
 
         <TabsContent value="analytics">
