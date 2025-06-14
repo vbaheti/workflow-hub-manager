@@ -120,21 +120,6 @@ const ServiceAgents = () => {
     agent.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getStatusBadge = (status: string) => {
-    return status === 'active' ? 
-      <Badge className="bg-green-100 text-green-800">Active</Badge> :
-      <Badge variant="secondary">Inactive</Badge>;
-  };
-
-  const getPerformanceBadge = (performance: string) => {
-    const variants = {
-      excellent: <Badge className="bg-blue-100 text-blue-800">Excellent</Badge>,
-      good: <Badge className="bg-green-100 text-green-800">Good</Badge>,
-      average: <Badge variant="secondary">Average</Badge>
-    };
-    return variants[performance as keyof typeof variants];
-  };
-
   const handleAgentAdded = (agent: any) => {
     // In a real application, this would update the agents list
     console.log('Agent added:', agent);
