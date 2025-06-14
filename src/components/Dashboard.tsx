@@ -4,12 +4,31 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, DollarSign, CheckCircle, AlertCircle, TrendingUp, Clock } from 'lucide-react';
+import ProjectSelector from './ProjectSelector';
+import { useProject } from '../contexts/ProjectContext';
 
 const Dashboard = () => {
+  const { currentProject } = useProject();
+
+  const getRegionalAgentNames = (region: string) => {
+    const names = {
+      'India': ['Arjun Sharma', 'Priya Patel', 'Rajesh Kumar', 'Sneha Reddy', 'Vikram Singh'],
+      'South Asia': ['Ahmed Hassan', 'Fatima Khan', 'Rashid Ali', 'Ayesha Begum', 'Imran Sheikh'],
+      'South East Asia': ['Lim Wei Ming', 'Siti Nurhaliza', 'Thanh Nguyen', 'Maria Santos', 'Putra Indra'],
+      'African Union': ['Kwame Asante', 'Amara Johnson', 'Tendai Mukamuri', 'Aisha Okonkwo', 'Omar El-Rashid']
+    };
+    return names[region as keyof typeof names] || names['India'];
+  };
+
+  const formatCurrency = (amount: number) => {
+    if (!currentProject) return `$${amount.toLocaleString()}`;
+    return `${currentProject.currencySymbol}${amount.toLocaleString()}`;
+  };
+
   const stats = [
     {
-      title: "Total Agents",
-      value: "245",
+      title: "Active Agents",
+      value: currentProject?.agentCount?.toString() || "0",
       change: "+12%",
       icon: Users,
       color: "text-blue-600",
@@ -25,15 +44,15 @@ const Dashboard = () => {
     },
     {
       title: "Monthly Revenue",
-      value: "$125,430",
+      value: formatCurrency(125430),
       change: "+18%",
       icon: DollarSign,
       color: "text-green-600",
       bgColor: "bg-green-50"
     },
     {
-      title: "Completed Tasks",
-      value: "1,247",
+      title: "Completed Routes",
+      value: currentProject?.routeCount?.toString() || "0",
       change: "+23%",
       icon: CheckCircle,
       color: "text-purple-600",
@@ -41,23 +60,59 @@ const Dashboard = () => {
     }
   ];
 
+  const agentNames = currentProject ? getRegionalAgentNames(currentProject.region) : [];
+  
   const recentActivities = [
-    { agent: "John Smith", action: "Commission approved", amount: "$2,450", time: "2 hours ago", status: "approved" },
-    { agent: "Sarah Johnson", action: "Reimbursement requested", amount: "$340", time: "4 hours ago", status: "pending" },
-    { agent: "Mike Davis", action: "Fee collection completed", amount: "$1,200", time: "6 hours ago", status: "completed" },
-    { agent: "Emily Chen", action: "Bank details updated", amount: "-", time: "1 day ago", status: "completed" },
-    { agent: "Robert Wilson", action: "Commission requested", amount: "$890", time: "1 day ago", status: "pending" }
+    { agent: agentNames[0], action: "Commission approved", amount: formatCurrency(2450), time: "2 hours ago", status: "approved" },
+    { agent: agentNames[1], action: "Reimbursement requested", amount: formatCurrency(340), time: "4 hours ago", status: "pending" },
+    { agent: agentNames[2], action: "Fee collection completed", amount: formatCurrency(1200), time: "6 hours ago", status: "completed" },
+    { agent: agentNames[3], action: "Bank details updated", amount: "-", time: "1 day ago", status: "completed" },
+    { agent: agentNames[4], action: "Commission requested", amount: formatCurrency(890), time: "1 day ago", status: "pending" }
   ];
 
   const pendingApprovals = [
-    { type: "Commission", agent: "Alice Brown", amount: "$3,200", priority: "high" },
-    { type: "Reimbursement", agent: "Tom Anderson", amount: "$675", priority: "medium" },
-    { type: "Fee Adjustment", agent: "Lisa Taylor", amount: "$1,100", priority: "low" },
-    { type: "Bank Update", agent: "James Miller", amount: "-", priority: "medium" }
+    { type: "Commission", agent: agentNames[0], amount: formatCurrency(3200), priority: "high" },
+    { type: "Reimbursement", agent: agentNames[1], amount: formatCurrency(675), priority: "medium" },
+    { type: "Fee Adjustment", agent: agentNames[2], amount: formatCurrency(1100), priority: "low" },
+    { type: "Bank Update", agent: agentNames[3], amount: "-", priority: "medium" }
   ];
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h2 className="text-2xl font-bold">Agent Portal Dashboard</h2>
+          <p className="text-muted-foreground">Service Management System</p>
+        </div>
+        <div className="w-80">
+          <ProjectSelector
+            selectedProject={currentProject?.id || ''}
+            onProjectChange={() => {}}
+            projects={[]}
+          />
+        </div>
+      </div>
+
+      {currentProject && (
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold">{currentProject.name}</h3>
+                <p className="text-sm text-muted-foreground">{currentProject.region} • {currentProject.description}</p>
+              </div>
+              <Badge className={
+                currentProject.status === 'active' ? 'bg-green-100 text-green-800' :
+                currentProject.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                'bg-yellow-100 text-yellow-800'
+              }>
+                {currentProject.status}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, index) => (
@@ -155,7 +210,7 @@ const Dashboard = () => {
       <Card>
         <CardHeader>
           <CardTitle>Performance Overview</CardTitle>
-          <CardDescription>Monthly targets and achievements</CardDescription>
+          <CardDescription>Monthly targets and achievements for {currentProject?.name}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -165,7 +220,7 @@ const Dashboard = () => {
                 <span>78%</span>
               </div>
               <Progress value={78} className="h-2" />
-              <p className="text-xs text-muted-foreground">$156,000 / $200,000</p>
+              <p className="text-xs text-muted-foreground">{formatCurrency(156000)} / {formatCurrency(200000)}</p>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">

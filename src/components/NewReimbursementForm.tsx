@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useProject } from '../contexts/ProjectContext';
 
 interface NewReimbursementFormProps {
   onSubmit: (reimbursement: any) => void;
@@ -15,9 +16,10 @@ interface NewReimbursementFormProps {
 
 export default function NewReimbursementForm({ onSubmit }: NewReimbursementFormProps) {
   const [open, setOpen] = useState(false);
+  const { currentProject, projects } = useProject();
   const [formData, setFormData] = useState({
     employeeName: '',
-    project: '',
+    project: currentProject?.id || '',
     category: '',
     amount: '',
     description: '',
@@ -25,23 +27,39 @@ export default function NewReimbursementForm({ onSubmit }: NewReimbursementFormP
   });
   const { toast } = useToast();
 
-  const projects = [
-    'Project Alpha',
-    'Project Beta',
-    'Project Gamma',
-    'Project Delta',
-    'Project Epsilon'
-  ];
+  const getRegionalEmployees = () => {
+    const employeesByRegion = {
+      'India': ['Arjun Sharma', 'Priya Patel', 'Rajesh Kumar', 'Sneha Reddy', 'Vikram Singh'],
+      'South Asia': ['Ahmed Hassan', 'Fatima Khan', 'Rashid Ali', 'Ayesha Begum', 'Imran Sheikh'],
+      'South East Asia': ['Lim Wei Ming', 'Siti Nurhaliza', 'Thanh Nguyen', 'Maria Santos', 'Putra Indra'],
+      'African Union': ['Kwame Asante', 'Amara Johnson', 'Tendai Mukamuri', 'Aisha Okonkwo', 'Omar El-Rashid']
+    };
+    
+    const selectedProject = projects.find(p => p.id === formData.project);
+    if (selectedProject) {
+      return employeesByRegion[selectedProject.region as keyof typeof employeesByRegion] || [];
+    }
+    return [];
+  };
 
   const categories = [
-    'Travel',
-    'Meals',
+    'Travel & Transportation',
+    'Meals & Accommodation',
     'Office Supplies',
-    'Training',
-    'Equipment',
-    'Communication',
-    'Accommodation'
+    'Training & Development',
+    'Equipment & Tools',
+    'Communication & Internet',
+    'Field Operations',
+    'Medical Expenses'
   ];
+
+  const formatCurrency = (amount: string) => {
+    const selectedProject = projects.find(p => p.id === formData.project);
+    if (selectedProject && amount) {
+      return `${selectedProject.currencySymbol}${amount}`;
+    }
+    return amount;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +73,17 @@ export default function NewReimbursementForm({ onSubmit }: NewReimbursementFormP
       return;
     }
 
+    const selectedProject = projects.find(p => p.id === formData.project);
     const newReimbursement = {
       id: Date.now().toString(),
       employeeName: formData.employeeName,
-      project: formData.project,
+      project: selectedProject?.name || formData.project,
+      projectId: formData.project,
       category: formData.category,
       amount: parseFloat(formData.amount),
+      currency: selectedProject?.currency || 'USD',
+      currencySymbol: selectedProject?.currencySymbol || '$',
+      region: selectedProject?.region || 'Unknown',
       description: formData.description,
       submittedDate: new Date().toISOString().split('T')[0],
       status: 'pending' as const,
@@ -71,7 +94,7 @@ export default function NewReimbursementForm({ onSubmit }: NewReimbursementFormP
     setOpen(false);
     setFormData({
       employeeName: '',
-      project: '',
+      project: currentProject?.id || '',
       category: '',
       amount: '',
       description: '',
@@ -105,26 +128,34 @@ export default function NewReimbursementForm({ onSubmit }: NewReimbursementFormP
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="employeeName">Employee Name *</Label>
-            <Input
-              id="employeeName"
-              value={formData.employeeName}
-              onChange={(e) => setFormData(prev => ({ ...prev, employeeName: e.target.value }))}
-              placeholder="Enter employee name"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="project">Project *</Label>
-            <Select onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}>
+            <Select 
+              value={formData.project} 
+              onValueChange={(value) => setFormData(prev => ({ ...prev, project: value }))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select project" />
               </SelectTrigger>
               <SelectContent>
                 {projects.map((project) => (
-                  <SelectItem key={project} value={project}>
-                    {project}
+                  <SelectItem key={project.id} value={project.id}>
+                    {project.name} ({project.region})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="employeeName">Employee Name *</Label>
+            <Select onValueChange={(value) => setFormData(prev => ({ ...prev, employeeName: value }))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select employee" />
+              </SelectTrigger>
+              <SelectContent>
+                {getRegionalEmployees().map((employee) => (
+                  <SelectItem key={employee} value={employee}>
+                    {employee}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -148,7 +179,9 @@ export default function NewReimbursementForm({ onSubmit }: NewReimbursementFormP
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="amount">Amount ($) *</Label>
+            <Label htmlFor="amount">
+              Amount ({projects.find(p => p.id === formData.project)?.currencySymbol || '$'}) *
+            </Label>
             <Input
               id="amount"
               type="number"
