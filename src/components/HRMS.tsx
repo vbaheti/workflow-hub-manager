@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Users, UserPlus, Calendar, Clock, Search, Filter, Eye, Edit } from 'lucide-react';
+import AddEmployeeModal from './AddEmployeeModal';
+import ViewEmployeeModal from './ViewEmployeeModal';
+import EditEmployeeModal from './EditEmployeeModal';
 
 interface Employee {
   id: string;
@@ -60,6 +62,10 @@ export default function HRMS() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDepartment, setFilterDepartment] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [addModal, setAddModal] = useState(false);
+  const [viewModal, setViewModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const filteredEmployees = employees.filter(employee => {
     const matchesSearch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,6 +90,21 @@ export default function HRMS() {
   const activeEmployees = employees.filter(e => e.status === 'active').length;
   const onLeaveEmployees = employees.filter(e => e.status === 'on-leave').length;
 
+  // Handler for adding an employee (from the AddEmployeeModal)
+  const handleAddEmployee = (employeeData: Omit<Employee, 'id' | 'status'>) => {
+    const newEmployee: Employee = {
+      ...employeeData,
+      id: (employees.length + 1).toString(),
+      status: 'active', // default status
+    };
+    setEmployees([...employees, newEmployee]);
+  };
+
+  // Handler for editing an employee
+  const handleEditEmployee = (updatedEmployee: Employee) => {
+    setEmployees(employees.map(emp => emp.id === updatedEmployee.id ? updatedEmployee : emp));
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -91,11 +112,33 @@ export default function HRMS() {
           <h1 className="text-3xl font-bold text-gray-900">Human Resource Management</h1>
           <p className="text-gray-600 mt-2">Manage employee information, attendance, and leave requests</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setAddModal(true)}>
           <UserPlus className="h-4 w-4 mr-2" />
           Add Employee
         </Button>
       </div>
+
+      {/* Add Employee Modal */}
+      <AddEmployeeModal
+        open={addModal}
+        onClose={() => setAddModal(false)}
+        onAdd={handleAddEmployee}
+      />
+
+      {/* View Employee Modal */}
+      <ViewEmployeeModal
+        open={viewModal}
+        onClose={() => setViewModal(false)}
+        employee={selectedEmployee}
+      />
+
+      {/* Edit Employee Modal */}
+      <EditEmployeeModal
+        open={editModal}
+        onClose={() => setEditModal(false)}
+        employee={selectedEmployee}
+        onSave={handleEditEmployee}
+      />
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -216,11 +259,27 @@ export default function HRMS() {
               </div>
               
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline" className="flex-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setSelectedEmployee(employee);
+                    setViewModal(true);
+                  }}
+                >
                   <Eye className="h-4 w-4 mr-1" />
                   View
                 </Button>
-                <Button size="sm" variant="outline" className="flex-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="flex-1"
+                  onClick={() => {
+                    setSelectedEmployee(employee);
+                    setEditModal(true);
+                  }}
+                >
                   <Edit className="h-4 w-4 mr-1" />
                   Edit
                 </Button>
