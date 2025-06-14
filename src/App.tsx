@@ -7,8 +7,12 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import Dashboard from "./components/Dashboard";
 import ServiceAgents from "./components/ServiceAgents";
+import HRMS from "./components/HRMS";
 import FinancialTransactions from "./components/FinancialTransactions";
+import Reimbursements from "./components/Reimbursements";
+import BankDetails from "./components/BankDetails";
 import ApprovalWorkflow from "./components/ApprovalWorkflow";
+import Settings from "./components/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,14 +27,14 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/agents" element={<ServiceAgents />} />
-            <Route path="/hrms" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">HRMS Module</h2><p className="text-muted-foreground mt-2">Human Resource Management features coming soon...</p></div>} />
+            <Route path="/hrms" element={<HRMS />} />
             <Route path="/transactions" element={<FinancialTransactions />} />
             <Route path="/fees" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">Fee Collection</h2><p className="text-muted-foreground mt-2">Fee collection management coming soon...</p></div>} />
             <Route path="/commissions" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">Commission Management</h2><p className="text-muted-foreground mt-2">Commission approval features coming soon...</p></div>} />
-            <Route path="/reimbursements" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">Reimbursements</h2><p className="text-muted-foreground mt-2">Reimbursement processing coming soon...</p></div>} />
-            <Route path="/bank-details" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">Bank Details</h2><p className="text-muted-foreground mt-2">Bank details management coming soon...</p></div>} />
+            <Route path="/reimbursements" element={<Reimbursements />} />
+            <Route path="/bank-details" element={<BankDetails />} />
             <Route path="/approvals" element={<ApprovalWorkflow />} />
-            <Route path="/settings" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">Settings</h2><p className="text-muted-foreground mt-2">System settings coming soon...</p></div>} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Layout>
