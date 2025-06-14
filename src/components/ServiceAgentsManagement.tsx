@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Mail, Phone, MapPin, MoreHorizontal, Search } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useRBAC } from '../contexts/RBACContext';
 
 type Agent = any;
 
@@ -30,6 +31,8 @@ const ServiceAgentsManagement: React.FC<ServiceAgentsManagementProps> = ({
   onAssign,
   onPerformance
 }) => {
+  const { hasPermission } = useRBAC();
+
   const getStatusBadge = (status: string) => {
     return status === 'active' ? 
       <Badge className="bg-green-100 text-green-800">Active</Badge> :
@@ -139,11 +142,31 @@ const ServiceAgentsManagement: React.FC<ServiceAgentsManagementProps> = ({
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onView(agent)}>View Details</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onEdit(agent)}>Edit Agent</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onAssign(agent)}>Assign Routes</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => onPerformance(agent)}>View Performance</DropdownMenuItem>
-                      <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
+                      {hasPermission('view_agents') && (
+                        <DropdownMenuItem onClick={() => onView(agent)}>
+                          View Details
+                        </DropdownMenuItem>
+                      )}
+                      {hasPermission('edit_agents') && (
+                        <DropdownMenuItem onClick={() => onEdit(agent)}>
+                          Edit Agent
+                        </DropdownMenuItem>
+                      )}
+                      {hasPermission('assign_routes') && (
+                        <DropdownMenuItem onClick={() => onAssign(agent)}>
+                          Assign Routes
+                        </DropdownMenuItem>
+                      )}
+                      {hasPermission('view_analytics') && (
+                        <DropdownMenuItem onClick={() => onPerformance(agent)}>
+                          View Performance
+                        </DropdownMenuItem>
+                      )}
+                      {hasPermission('edit_agents') && (
+                        <DropdownMenuItem className="text-red-600">
+                          Deactivate
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

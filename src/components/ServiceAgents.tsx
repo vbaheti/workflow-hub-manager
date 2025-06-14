@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Route, BarChart3, Truck, DollarSign, Building2 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
+import { useRBAC } from '../contexts/RBACContext';
 import AddNewAgentForm from './AddNewAgentForm';
 import ViewAgentModal from './ViewAgentModal';
 import EditAgentModal from "./EditAgentModal";
@@ -13,6 +14,7 @@ import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 import ServicePriceSetting from './ServicePriceSetting';
 import BankDetails from './BankDetails';
+import PermissionGate from './PermissionGate';
 import { useStateContext } from "../contexts/StateContext";
 
 const ServiceAgents = () => {
@@ -24,6 +26,7 @@ const ServiceAgents = () => {
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
   const { selectedProject, currentProject } = useProject();
   const { selectedStates } = useStateContext();
+  const { hasPermission } = useRBAC();
 
   const allAgents = [
     {
@@ -112,9 +115,7 @@ const ServiceAgents = () => {
     }
   ];
 
-  // Helper: return the state name a project is "assigned to" (simulate for demo)
   function getProjectStates(projectName: string): string[] {
-    // Simple mock mapping for demonstration.
     if (projectName.toLowerCase().includes("delhi")) return ["Delhi"];
     if (projectName.toLowerCase().includes("mumbai")) return ["Maharashtra"];
     if (projectName.toLowerCase().includes("bangalore") || projectName.toLowerCase().includes("karnataka")) return ["Karnataka"];
@@ -123,19 +124,16 @@ const ServiceAgents = () => {
     return ["Delhi", "Maharashtra", "West Bengal"];
   }
 
-  // Filter agents based on selected project and MULTIPLE states
   const projectAgents = allAgents.filter(agent => {
     if (!currentProject) return false;
     const agentInProject = agent.projects.includes(currentProject.name);
-    // Simulated state: agent is considered in the state if assignedRoutes include locations for any selected state
     const routeMatch =
       selectedStates.length === 0
-        ? true // no state filter
+        ? true
         : agent.assignedRoutes.some(
             (r: string) =>
               selectedStates.some((state) => r.toLowerCase().includes(state.toLowerCase()))
           );
-    // As we lack state data for agents, fallback: show if project is mapped to any selected state
     const projectStates = getProjectStates(currentProject.name);
     const mappedState =
       selectedStates.length === 0
@@ -151,7 +149,6 @@ const ServiceAgents = () => {
   );
 
   const handleAgentAdded = (agent: any) => {
-    // In a real application, this would update the agents list
     console.log('Agent added:', agent);
   };
 
@@ -167,117 +164,151 @@ const ServiceAgents = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-5">
-        <div>
-          <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
-          <p className="text-muted-foreground">{currentProject.description}</p>
+    <PermissionGate permissions={['view_agents']}>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row justify-between items-center gap-5">
+          <div>
+            <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
+            <p className="text-muted-foreground">{currentProject.description}</p>
+          </div>
+          <div className="flex flex-col md:flex-row gap-4 md:items-end">
+            <PermissionGate permissions={['onboard_agents']}>
+              <AddNewAgentForm onAgentAdded={handleAgentAdded} />
+            </PermissionGate>
+          </div>
         </div>
-        <div className="flex flex-col md:flex-row gap-4 md:items-end">
-          <AddNewAgentForm onAgentAdded={handleAgentAdded} />
-        </div>
+
+        <Tabs defaultValue="agents" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="agents" className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Agents
+            </TabsTrigger>
+            {hasPermission('assign_routes') && (
+              <TabsTrigger value="assignment" className="flex items-center gap-2">
+                <Route className="h-4 w-4" />
+                Assignment & Scheduling
+              </TabsTrigger>
+            )}
+            {hasPermission('track_services') && (
+              <TabsTrigger value="delivery" className="flex items-center gap-2">
+                <Truck className="h-4 w-4" />
+                Service Tracking
+              </TabsTrigger>
+            )}
+            {hasPermission('view_analytics') && (
+              <TabsTrigger value="analytics" className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </TabsTrigger>
+            )}
+            {hasPermission('manage_pricing') && (
+              <TabsTrigger value="service-pricing" className="flex items-center gap-2">
+                <DollarSign className="h-4 w-4" />
+                Service Pricing
+              </TabsTrigger>
+            )}
+            {hasPermission('manage_bank_details') && (
+              <TabsTrigger value="bank-details" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                Bank Details
+              </TabsTrigger>
+            )}
+          </TabsList>
+
+          <TabsContent value="agents">
+            <ServiceAgentsManagement
+              agents={filteredAgents}
+              searchTerm={searchTerm}
+              setSearchTerm={setSearchTerm}
+              onView={agent => {
+                setSelectedAgent(agent);
+                setViewModalOpen(true);
+              }}
+              onEdit={agent => {
+                setSelectedAgent(agent);
+                setEditModalOpen(true);
+              }}
+              onAssign={agent => {
+                setSelectedAgent(agent);
+                setAssignRoutesModalOpen(true);
+              }}
+              onPerformance={agent => {
+                setSelectedAgent(agent);
+                setPerformanceModalOpen(true);
+              }}
+            />
+          </TabsContent>
+
+          {hasPermission('assign_routes') && (
+            <TabsContent value="assignment">
+              <ServiceAgentsAssignment
+                agents={projectAgents}
+                projectId={selectedProject}
+              />
+            </TabsContent>
+          )}
+
+          {hasPermission('track_services') && (
+            <TabsContent value="delivery">
+              <ServiceAgentsTracking />
+            </TabsContent>
+          )}
+
+          {hasPermission('view_analytics') && (
+            <TabsContent value="analytics">
+              <ServiceAgentsAnalytics
+                agents={projectAgents}
+              />
+            </TabsContent>
+          )}
+
+          {hasPermission('manage_pricing') && (
+            <TabsContent value="service-pricing">
+              <ServicePriceSetting />
+            </TabsContent>
+          )}
+
+          {hasPermission('manage_bank_details') && (
+            <TabsContent value="bank-details">
+              <BankDetails />
+            </TabsContent>
+          )}
+        </Tabs>
+
+        <PermissionGate permissions={['view_agents']}>
+          <ViewAgentModal
+            agent={selectedAgent}
+            open={viewModalOpen}
+            onClose={() => setViewModalOpen(false)}
+          />
+        </PermissionGate>
+        
+        <PermissionGate permissions={['edit_agents']}>
+          <EditAgentModal
+            agent={selectedAgent}
+            open={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+          />
+        </PermissionGate>
+        
+        <PermissionGate permissions={['assign_routes']}>
+          <AssignRoutesModal
+            agent={selectedAgent}
+            open={assignRoutesModalOpen}
+            onClose={() => setAssignRoutesModalOpen(false)}
+          />
+        </PermissionGate>
+        
+        <PermissionGate permissions={['view_analytics']}>
+          <ViewPerformanceModal
+            agent={selectedAgent}
+            open={performanceModalOpen}
+            onClose={() => setPerformanceModalOpen(false)}
+          />
+        </PermissionGate>
       </div>
-
-      <Tabs defaultValue="agents" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="agents" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            Agents
-          </TabsTrigger>
-          <TabsTrigger value="assignment" className="flex items-center gap-2">
-            <Route className="h-4 w-4" />
-            Assignment & Scheduling
-          </TabsTrigger>
-          <TabsTrigger value="delivery" className="flex items-center gap-2">
-            <Truck className="h-4 w-4" />
-            Service Tracking
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="flex items-center gap-2">
-            <BarChart3 className="h-4 w-4" />
-            Analytics
-          </TabsTrigger>
-          <TabsTrigger value="service-pricing" className="flex items-center gap-2">
-            <DollarSign className="h-4 w-4" />
-            Service Pricing
-          </TabsTrigger>
-          <TabsTrigger value="bank-details" className="flex items-center gap-2">
-            <Building2 className="h-4 w-4" />
-            Bank Details
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="agents">
-          <ServiceAgentsManagement
-            agents={filteredAgents}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            onView={agent => {
-              setSelectedAgent(agent);
-              setViewModalOpen(true);
-            }}
-            onEdit={agent => {
-              setSelectedAgent(agent);
-              setEditModalOpen(true);
-            }}
-            onAssign={agent => {
-              setSelectedAgent(agent);
-              setAssignRoutesModalOpen(true);
-            }}
-            onPerformance={agent => {
-              setSelectedAgent(agent);
-              setPerformanceModalOpen(true);
-            }}
-          />
-        </TabsContent>
-
-        <TabsContent value="assignment">
-          <ServiceAgentsAssignment
-            agents={projectAgents}
-            projectId={selectedProject}
-          />
-        </TabsContent>
-
-        <TabsContent value="delivery">
-          <ServiceAgentsTracking />
-        </TabsContent>
-
-        <TabsContent value="analytics">
-          <ServiceAgentsAnalytics
-            agents={projectAgents}
-          />
-        </TabsContent>
-
-        <TabsContent value="service-pricing">
-          <ServicePriceSetting />
-        </TabsContent>
-
-        <TabsContent value="bank-details">
-          <BankDetails />
-        </TabsContent>
-      </Tabs>
-
-      {/* MODALS */}
-      <ViewAgentModal
-        agent={selectedAgent}
-        open={viewModalOpen}
-        onClose={() => setViewModalOpen(false)}
-      />
-      <EditAgentModal
-        agent={selectedAgent}
-        open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-      />
-      <AssignRoutesModal
-        agent={selectedAgent}
-        open={assignRoutesModalOpen}
-        onClose={() => setAssignRoutesModalOpen(false)}
-      />
-      <ViewPerformanceModal
-        agent={selectedAgent}
-        open={performanceModalOpen}
-        onClose={() => setPerformanceModalOpen(false)}
-      />
-    </div>
+    </PermissionGate>
   );
 };
 

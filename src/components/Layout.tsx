@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Users, DollarSign, FileText, CheckCircle, Building, Settings, Home, UserCheck, Wallet, CreditCard, LayoutDashboard, TrendingUp, Receipt } from 'lucide-react';
@@ -5,6 +6,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useProject } from '../contexts/ProjectContext';
 import ProjectSelector from './ProjectSelector';
 import StateSelector from './StateSelector';
+import RoleSelector from './RoleSelector';
 
 const menuItems = [
   {
@@ -81,6 +83,7 @@ function AppSidebar() {
             projects={projects}
           />
           <StateSelector />
+          <RoleSelector />
         </div>
       </SidebarHeader>
       <SidebarContent>
