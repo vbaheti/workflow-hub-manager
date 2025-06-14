@@ -1,23 +1,16 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Search, Mail, Phone, MapPin, MoreHorizontal, Route, BarChart3, TrendingUp, Users, Calendar, Truck } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import RouteAssignment from './RouteAssignment';
-import AgentAnalytics from './AgentAnalytics';
-import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
-import AddNewAgentForm from './AddNewAgentForm';
-import ServiceDeliveryTracking from './ServiceDeliveryTracking';
+import { Users, Route, BarChart3, Truck } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
-import ViewAgentModal from "./ViewAgentModal";
+import AddNewAgentForm from './AddNewAgentForm';
+import ViewAgentModal from './ViewAgentModal';
 import EditAgentModal from "./EditAgentModal";
 import AssignRoutesModal from "./AssignRoutesModal";
 import ViewPerformanceModal from "./ViewPerformanceModal";
+import ServiceAgentsManagement from './ServiceAgentsManagement';
+import ServiceAgentsAssignment from './ServiceAgentsAssignment';
+import ServiceAgentsTracking from './ServiceAgentsTracking';
+import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -189,162 +182,39 @@ const ServiceAgents = () => {
         </TabsList>
 
         <TabsContent value="agents">
-          <Card>
-            <CardHeader>
-              <CardTitle>Agent Management</CardTitle>
-              <CardDescription>
-                Overview of agents in {currentProject.name}
-              </CardDescription>
-              <div className="flex items-center space-x-2">
-                <Search className="h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search agents..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-sm"
-                />
-              </div>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Agent</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Location</TableHead>
-                    <TableHead>Projects</TableHead>
-                    <TableHead>Routes</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Performance</TableHead>
-                    <TableHead>Collections</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAgents.map((agent) => (
-                    <TableRow key={agent.id} className="hover:bg-gray-50">
-                      <TableCell>
-                        <div className="flex items-center space-x-3">
-                          <Avatar>
-                            <AvatarImage src={agent.avatar} />
-                            <AvatarFallback>
-                              {agent.name.split(' ').map(n => n[0]).join('')}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <p className="font-medium">{agent.name}</p>
-                            <p className="text-sm text-muted-foreground">ID: {agent.id.toString().padStart(4, '0')}</p>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <Mail className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{agent.email}</span>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Phone className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-sm">{agent.phone}</span>
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <MapPin className="h-3 w-3 text-muted-foreground" />
-                          <span>{agent.location}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {agent.projects.filter(project => project === currentProject.name).map((project, index) => (
-                            <Badge key={index} variant="outline" className="text-xs">
-                              {project}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {agent.assignedRoutes.map((route, index) => (
-                            <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700">
-                              {route}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(agent.status)}</TableCell>
-                      <TableCell>{getPerformanceBadge(agent.performance)}</TableCell>
-                      <TableCell className="font-semibold">{agent.totalCollections}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedAgent(agent);
-                                setViewModalOpen(true);
-                              }}
-                            >
-                              View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedAgent(agent);
-                                setEditModalOpen(true);
-                              }}
-                            >
-                              Edit Agent
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedAgent(agent);
-                                setAssignRoutesModalOpen(true);
-                              }}
-                            >
-                              Assign Routes
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setSelectedAgent(agent);
-                                setPerformanceModalOpen(true);
-                              }}
-                            >
-                              View Performance
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">Deactivate</DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <ServiceAgentsManagement
+            agents={filteredAgents}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            onView={agent => {
+              setSelectedAgent(agent);
+              setViewModalOpen(true);
+            }}
+            onEdit={agent => {
+              setSelectedAgent(agent);
+              setEditModalOpen(true);
+            }}
+            onAssign={agent => {
+              setSelectedAgent(agent);
+              setAssignRoutesModalOpen(true);
+            }}
+            onPerformance={agent => {
+              setSelectedAgent(agent);
+              setPerformanceModalOpen(true);
+            }}
+          />
         </TabsContent>
 
         <TabsContent value="assignment">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <RouteAssignment agents={projectAgents} />
-            </div>
-            <div>
-              <TimeBoundRouteAssignment agents={projectAgents} projectId={selectedProject} />
-            </div>
-          </div>
+          <ServiceAgentsAssignment agents={projectAgents} projectId={selectedProject} />
         </TabsContent>
 
         <TabsContent value="delivery">
-          <ServiceDeliveryTracking />
+          <ServiceAgentsTracking />
         </TabsContent>
 
         <TabsContent value="analytics">
-          <AgentAnalytics agents={projectAgents} />
+          <ServiceAgentsAnalytics agents={projectAgents} />
         </TabsContent>
       </Tabs>
 
