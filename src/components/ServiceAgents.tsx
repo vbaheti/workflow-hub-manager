@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,83 +11,96 @@ import { Search, UserPlus, Mail, Phone, MapPin, MoreHorizontal, Route, BarChart3
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import RouteAssignment from './RouteAssignment';
 import AgentAnalytics from './AgentAnalytics';
-import ProjectSelector from './ProjectSelector';
 import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
 import { useProject } from '../contexts/ProjectContext';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const { selectedProject, setSelectedProject, projects, currentProject } = useProject();
+  const { selectedProject, currentProject } = useProject();
 
   const allAgents = [
     {
       id: 1,
-      name: "John Smith",
-      email: "john.smith@company.com",
-      phone: "+1 (555) 123-4567",
-      location: "New York, NY",
+      name: "Rajesh Kumar",
+      email: "rajesh.kumar@company.com",
+      phone: "+91 98765 43210",
+      location: "Delhi, India",
       status: "active",
       performance: "excellent",
       joinDate: "2023-01-15",
-      totalCollections: "$45,200",
-      assignedRoutes: ["Manhattan District", "Brooklyn Heights"],
-      projects: ["Project Alpha", "Project Beta"],
+      totalCollections: "₹4,52,000",
+      assignedRoutes: ["Central Delhi", "Connaught Place"],
+      projects: ["Mumbai Financial Hub", "Delhi Service Network"],
       avatar: ""
     },
     {
       id: 2,
-      name: "Sarah Johnson",
-      email: "sarah.johnson@company.com",
-      phone: "+1 (555) 234-5678",
-      location: "Los Angeles, CA",
+      name: "Priya Sharma",
+      email: "priya.sharma@company.com",
+      phone: "+91 87654 32109",
+      location: "Mumbai, India",
       status: "active",
       performance: "good",
       joinDate: "2023-03-20",
-      totalCollections: "$38,900",
-      assignedRoutes: ["Hollywood District", "Santa Monica"],
-      projects: ["Project Beta", "Project Gamma"],
+      totalCollections: "₹3,89,000",
+      assignedRoutes: ["Bandra West", "Andheri East"],
+      projects: ["Mumbai Financial Hub", "Bangalore Tech Corridor"],
       avatar: ""
     },
     {
       id: 3,
-      name: "Mike Davis",
-      email: "mike.davis@company.com",
-      phone: "+1 (555) 345-6789",
-      location: "Chicago, IL",
+      name: "Ahmed Hassan",
+      email: "ahmed.hassan@company.com",
+      phone: "+880 1712 345678",
+      location: "Dhaka, Bangladesh",
       status: "inactive",
       performance: "average",
       joinDate: "2022-11-10",
-      totalCollections: "$29,500",
-      assignedRoutes: ["Downtown Chicago"],
-      projects: ["Project Alpha"],
+      totalCollections: "৳2,95,000",
+      assignedRoutes: ["Gulshan District"],
+      projects: ["Dhaka Urban Services"],
       avatar: ""
     },
     {
       id: 4,
-      name: "Emily Chen",
-      email: "emily.chen@company.com",
-      phone: "+1 (555) 456-7890",
-      location: "San Francisco, CA",
+      name: "Fatima Al-Zahra",
+      email: "fatima.alzahra@company.com",
+      phone: "+971 50 123 4567",
+      location: "Dubai, UAE",
       status: "active",
       performance: "excellent",
       joinDate: "2023-05-08",
-      totalCollections: "$52,100",
-      assignedRoutes: ["Financial District", "Mission Bay"],
-      projects: ["Project Delta", "Project Epsilon"],
+      totalCollections: "AED 521,000",
+      assignedRoutes: ["Business Bay", "DIFC"],
+      projects: ["UAE Business Services", "Dubai Financial District"],
       avatar: ""
     },
     {
       id: 5,
-      name: "Robert Wilson",
-      email: "robert.wilson@company.com",
-      phone: "+1 (555) 567-8901",
-      location: "Miami, FL",
+      name: "Chen Wei Ming",
+      email: "chen.weiming@company.com",
+      phone: "+65 8765 4321",
+      location: "Singapore",
       status: "active",
       performance: "good",
       joinDate: "2023-02-14",
-      totalCollections: "$41,800",
-      assignedRoutes: ["South Beach", "Brickell"],
-      projects: ["Project Gamma", "Project Delta"],
+      totalCollections: "S$418,000",
+      assignedRoutes: ["Marina Bay", "Raffles Place"],
+      projects: ["Singapore Financial Hub", "Southeast Asia Expansion"],
+      avatar: ""
+    },
+    {
+      id: 6,
+      name: "Amara Okafor",
+      email: "amara.okafor@company.com",
+      phone: "+234 803 123 4567",
+      location: "Lagos, Nigeria",
+      status: "active",
+      performance: "excellent",
+      joinDate: "2023-04-12",
+      totalCollections: "₦12,500,000",
+      assignedRoutes: ["Victoria Island", "Ikoyi"],
+      projects: ["Lagos Commercial Hub", "West Africa Network"],
       avatar: ""
     }
   ];
@@ -118,24 +132,29 @@ const ServiceAgents = () => {
     return variants[performance as keyof typeof variants];
   };
 
+  if (!currentProject) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
+          <p className="text-gray-600">Please select a project from the sidebar to view agents.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold">Service Agents</h2>
-          <p className="text-muted-foreground">Manage agents, routes, and performance analytics by project</p>
+          <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
+          <p className="text-muted-foreground">{currentProject.description}</p>
         </div>
         <Button className="flex items-center gap-2">
           <UserPlus className="h-4 w-4" />
           Add New Agent
         </Button>
       </div>
-
-      <ProjectSelector
-        selectedProject={selectedProject}
-        onProjectChange={setSelectedProject}
-        projects={projects}
-      />
 
       <Tabs defaultValue="agents" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
@@ -162,7 +181,7 @@ const ServiceAgents = () => {
             <CardHeader>
               <CardTitle>Agent Management</CardTitle>
               <CardDescription>
-                Overview of agents in {currentProject?.name}
+                Overview of agents in {currentProject.name}
               </CardDescription>
               <div className="flex items-center space-x-2">
                 <Search className="h-4 w-4 text-muted-foreground" />
@@ -226,7 +245,7 @@ const ServiceAgents = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
-                          {agent.projects.map((project, index) => (
+                          {agent.projects.filter(project => project === currentProject.name).map((project, index) => (
                             <Badge key={index} variant="outline" className="text-xs">
                               {project}
                             </Badge>

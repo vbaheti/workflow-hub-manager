@@ -4,63 +4,94 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Users, DollarSign, CheckCircle, AlertCircle, TrendingUp, Clock } from 'lucide-react';
+import { useProject } from '../contexts/ProjectContext';
 
 const Dashboard = () => {
-  const stats = [
-    {
-      title: "Total Agents",
-      value: "245",
-      change: "+12%",
-      icon: Users,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    },
-    {
-      title: "Pending Approvals",
-      value: "18",
-      change: "-5%",
-      icon: Clock,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50"
-    },
-    {
-      title: "Monthly Revenue",
-      value: "$125,430",
-      change: "+18%",
-      icon: DollarSign,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "Completed Tasks",
-      value: "1,247",
-      change: "+23%",
-      icon: CheckCircle,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50"
-    }
-  ];
+  const { currentProject } = useProject();
 
-  const recentActivities = [
-    { agent: "John Smith", action: "Commission approved", amount: "$2,450", time: "2 hours ago", status: "approved" },
-    { agent: "Sarah Johnson", action: "Reimbursement requested", amount: "$340", time: "4 hours ago", status: "pending" },
-    { agent: "Mike Davis", action: "Fee collection completed", amount: "$1,200", time: "6 hours ago", status: "completed" },
-    { agent: "Emily Chen", action: "Bank details updated", amount: "-", time: "1 day ago", status: "completed" },
-    { agent: "Robert Wilson", action: "Commission requested", amount: "$890", time: "1 day ago", status: "pending" }
-  ];
+  // Project-specific data based on region
+  const getProjectData = () => {
+    if (!currentProject) return null;
+
+    const projectDataMap = {
+      'mumbai-financial': {
+        currency: '₹',
+        stats: [
+          { title: "Total Agents", value: "45", change: "+8%", icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
+          { title: "Pending Approvals", value: "12", change: "-3%", icon: Clock, color: "text-orange-600", bgColor: "bg-orange-50" },
+          { title: "Monthly Revenue", value: "₹18,45,430", change: "+22%", icon: DollarSign, color: "text-green-600", bgColor: "bg-green-50" },
+          { title: "Completed Tasks", value: "1,247", change: "+25%", icon: CheckCircle, color: "text-purple-600", bgColor: "bg-purple-50" }
+        ],
+        activities: [
+          { agent: "Rajesh Kumar", action: "Commission approved", amount: "₹24,500", time: "2 hours ago", status: "approved" },
+          { agent: "Priya Sharma", action: "Reimbursement requested", amount: "₹3,400", time: "4 hours ago", status: "pending" },
+          { agent: "Amit Patel", action: "Fee collection completed", amount: "₹12,000", time: "6 hours ago", status: "completed" }
+        ]
+      },
+      'delhi-service': {
+        currency: '₹',
+        stats: [
+          { title: "Total Agents", value: "38", change: "+5%", icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
+          { title: "Pending Approvals", value: "8", change: "-2%", icon: Clock, color: "text-orange-600", bgColor: "bg-orange-50" },
+          { title: "Monthly Revenue", value: "₹14,25,680", change: "+18%", icon: DollarSign, color: "text-green-600", bgColor: "bg-green-50" },
+          { title: "Completed Tasks", value: "956", change: "+20%", icon: CheckCircle, color: "text-purple-600", bgColor: "bg-purple-50" }
+        ],
+        activities: [
+          { agent: "Sunita Singh", action: "Commission approved", amount: "₹18,750", time: "1 hour ago", status: "approved" },
+          { agent: "Vikram Yadav", action: "Route completed", amount: "₹8,500", time: "3 hours ago", status: "completed" }
+        ]
+      },
+      'singapore-hub': {
+        currency: 'S$',
+        stats: [
+          { title: "Total Agents", value: "28", change: "+12%", icon: Users, color: "text-blue-600", bgColor: "bg-blue-50" },
+          { title: "Pending Approvals", value: "5", change: "-1%", icon: Clock, color: "text-orange-600", bgColor: "bg-orange-50" },
+          { title: "Monthly Revenue", value: "S$125,430", change: "+25%", icon: DollarSign, color: "text-green-600", bgColor: "bg-green-50" },
+          { title: "Completed Tasks", value: "674", change: "+30%", icon: CheckCircle, color: "text-purple-600", bgColor: "bg-purple-50" }
+        ],
+        activities: [
+          { agent: "Chen Wei Ming", action: "Commission approved", amount: "S$4,200", time: "30 min ago", status: "approved" },
+          { agent: "Lim Hui Fen", action: "Fee collection", amount: "S$2,800", time: "2 hours ago", status: "completed" }
+        ]
+      }
+    };
+
+    const key = currentProject.id as keyof typeof projectDataMap;
+    return projectDataMap[key] || projectDataMap['mumbai-financial'];
+  };
+
+  const projectData = getProjectData();
+
+  if (!currentProject || !projectData) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
+          <p className="text-gray-600">Please select a project from the sidebar to view dashboard data.</p>
+        </div>
+      </div>
+    );
+  }
 
   const pendingApprovals = [
-    { type: "Commission", agent: "Alice Brown", amount: "$3,200", priority: "high" },
-    { type: "Reimbursement", agent: "Tom Anderson", amount: "$675", priority: "medium" },
-    { type: "Fee Adjustment", agent: "Lisa Taylor", amount: "$1,100", priority: "low" },
-    { type: "Bank Update", agent: "James Miller", amount: "-", priority: "medium" }
+    { type: "Commission", agent: "Rajesh Kumar", amount: `${projectData.currency}32,000`, priority: "high" },
+    { type: "Reimbursement", agent: "Priya Sharma", amount: `${projectData.currency}6,750`, priority: "medium" },
+    { type: "Fee Adjustment", agent: "Amit Patel", amount: `${projectData.currency}11,000`, priority: "low" },
+    { type: "Bank Update", agent: "Sunita Singh", amount: "-", priority: "medium" }
   ];
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-bold">Dashboard - {currentProject.name}</h2>
+          <p className="text-muted-foreground">{currentProject.description}</p>
+        </div>
+      </div>
+
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {stats.map((stat, index) => (
+        {projectData.stats.map((stat, index) => (
           <Card key={index} className="hover:shadow-md transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -90,11 +121,11 @@ const Dashboard = () => {
               <TrendingUp className="h-5 w-5" />
               Recent Activities
             </CardTitle>
-            <CardDescription>Latest agent activities and transactions</CardDescription>
+            <CardDescription>Latest agent activities and transactions in {currentProject.name}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivities.map((activity, index) => (
+              {projectData.activities.map((activity, index) => (
                 <div key={index} className="flex items-center justify-between p-3 rounded-lg border bg-gray-50">
                   <div className="flex-1">
                     <p className="font-medium text-sm">{activity.agent}</p>
@@ -124,7 +155,7 @@ const Dashboard = () => {
               <AlertCircle className="h-5 w-5" />
               Pending Approvals
             </CardTitle>
-            <CardDescription>Items requiring supervisor approval</CardDescription>
+            <CardDescription>Items requiring supervisor approval in {currentProject.name}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -154,7 +185,7 @@ const Dashboard = () => {
       {/* Performance Overview */}
       <Card>
         <CardHeader>
-          <CardTitle>Performance Overview</CardTitle>
+          <CardTitle>Performance Overview - {currentProject.name}</CardTitle>
           <CardDescription>Monthly targets and achievements</CardDescription>
         </CardHeader>
         <CardContent>
@@ -165,7 +196,7 @@ const Dashboard = () => {
                 <span>78%</span>
               </div>
               <Progress value={78} className="h-2" />
-              <p className="text-xs text-muted-foreground">$156,000 / $200,000</p>
+              <p className="text-xs text-muted-foreground">{projectData.currency}156,000 / {projectData.currency}200,000</p>
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">

@@ -12,6 +12,8 @@ import FinancialTransactions from './components/FinancialTransactions';
 import Reimbursements from './components/Reimbursements';
 import HRMS from './components/HRMS';
 import Settings from './components/Settings';
+import CommissionApproval from './components/CommissionApproval';
+import ApprovalWorkflow from './components/ApprovalWorkflow';
 import { ProjectProvider } from './contexts/ProjectContext';
 
 const queryClient = new QueryClient();
@@ -23,13 +25,15 @@ function App() {
         <Router>
           <Layout>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Dashboard />} />
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/agents" element={<ServiceAgents />} />
               <Route path="/fees" element={<FeeCollection />} />
               <Route path="/transactions" element={<FinancialTransactions />} />
               <Route path="/reimbursements" element={<Reimbursements />} />
               <Route path="/hrms" element={<HRMS />} />
+              <Route path="/commissions" element={<CommissionApproval />} />
+              <Route path="/approvals" element={<ApprovalWorkflow />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
