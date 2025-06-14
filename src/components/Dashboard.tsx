@@ -8,7 +8,7 @@ import ProjectSelector from './ProjectSelector';
 import { useProject } from '../contexts/ProjectContext';
 
 const Dashboard = () => {
-  const { currentProject } = useProject();
+  const { selectedProject, setSelectedProject, projects, currentProject } = useProject();
 
   const getRegionalAgentNames = (region: string) => {
     const names = {
@@ -86,9 +86,9 @@ const Dashboard = () => {
         </div>
         <div className="w-80">
           <ProjectSelector
-            selectedProject={currentProject?.id || ''}
-            onProjectChange={() => {}}
-            projects={[]}
+            selectedProject={selectedProject}
+            onProjectChange={setSelectedProject}
+            projects={projects}
           />
         </div>
       </div>
