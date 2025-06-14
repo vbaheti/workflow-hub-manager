@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { CalendarIcon, Plus, MapPin, Trash2, Clock, Map } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { CalendarIcon, Plus, MapPin, Trash2, Clock, Map, List } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -62,6 +62,7 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
   const googleMapRef = useRef<google.maps.Map | null>(null);
   const directionsServiceRef = useRef<google.maps.DirectionsService | null>(null);
   const directionsRendererRef = useRef<google.maps.DirectionsRenderer | null>(null);
+  const [routeInputMethod, setRouteInputMethod] = useState<'map' | 'form'>('form');
 
   const { toast } = useToast();
 
@@ -142,6 +143,36 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
         variant: "destructive"
       });
     }
+  };
+
+  const addStopFromForm = () => {
+    if (!newStop.address || !newStop.expectedTime) {
+      toast({
+        title: "Error",
+        description: "Please fill in address and expected time for the stop.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const stop: Stop = {
+      id: Date.now().toString(),
+      ...newStop
+    };
+
+    setStops([...stops, stop]);
+    setNewStop({
+      address: '',
+      expectedTime: '',
+      duration: 30,
+      priority: 'medium',
+      notes: ''
+    });
+
+    toast({
+      title: "Stop Added",
+      description: `Added stop at ${newStop.address}`,
+    });
   };
 
   const updateRouteDisplay = () => {
@@ -275,7 +306,7 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
     }
   };
 
-  if (showApiKeyInput) {
+  if (showApiKeyInput && routeInputMethod === 'map') {
     return (
       <Card className="max-w-md mx-auto">
         <CardHeader>
@@ -292,22 +323,31 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
               placeholder="Enter your Google Maps API key"
             />
           </div>
-          <Button 
-            onClick={() => {
-              if (mapApiKey) {
-                setShowApiKeyInput(false);
-              } else {
-                toast({
-                  title: "Error",
-                  description: "Please enter a valid API key",
-                  variant: "destructive"
-                });
-              }
-            }}
-            className="w-full"
-          >
-            Continue
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={() => {
+                if (mapApiKey) {
+                  setShowApiKeyInput(false);
+                } else {
+                  toast({
+                    title: "Error",
+                    description: "Please enter a valid API key",
+                    variant: "destructive"
+                  });
+                }
+              }}
+              className="flex-1"
+            >
+              Continue with Maps
+            </Button>
+            <Button 
+              variant="outline"
+              onClick={() => setRouteInputMethod('form')}
+              className="flex-1"
+            >
+              Use Form Instead
+            </Button>
+          </div>
           <p className="text-xs text-muted-foreground">
             Get your API key from the Google Cloud Console and enable the Maps JavaScript API and Places API.
           </p>
@@ -408,138 +448,218 @@ const NewRouteForm = ({ agents, projectId, onRouteCreated, onConflictCheck }: Ne
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Map className="h-5 w-5" />
-            Interactive Route Map
+            <MapPin className="h-5 w-5" />
+            Route Stops Management
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Click on the map to add stops to your route. The route will be automatically calculated and displayed.
-            </p>
-            <div 
-              ref={mapRef} 
-              className="w-full h-96 border rounded-lg"
-              style={{ minHeight: '400px' }}
-            />
-          </div>
-        </CardContent>
-      </Card>
+          <Tabs value={routeInputMethod} onValueChange={(value: any) => setRouteInputMethod(value)} className="space-y-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="form" className="flex items-center gap-2">
+                <List className="h-4 w-4" />
+                Form Entry
+              </TabsTrigger>
+              <TabsTrigger value="map" className="flex items-center gap-2">
+                <Map className="h-4 w-4" />
+                Interactive Map
+              </TabsTrigger>
+            </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Route Stops</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="address">Address *</Label>
-              <Input
-                id="address"
-                value={newStop.address}
-                onChange={(e) => setNewStop(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Enter stop address"
-              />
-            </div>
+            <TabsContent value="form" className="space-y-4">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Add route stops manually using the form below. Enter addresses and details for each stop.
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address *</Label>
+                    <Input
+                      id="address"
+                      value={newStop.address}
+                      onChange={(e) => setNewStop(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="Enter stop address"
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="expectedTime">Expected Time *</Label>
-              <Input
-                id="expectedTime"
-                type="time"
-                value={newStop.expectedTime}
-                onChange={(e) => setNewStop(prev => ({ ...prev, expectedTime: e.target.value }))}
-              />
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="expectedTime">Expected Time *</Label>
+                    <Input
+                      id="expectedTime"
+                      type="time"
+                      value={newStop.expectedTime}
+                      onChange={(e) => setNewStop(prev => ({ ...prev, expectedTime: e.target.value }))}
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="duration">Duration (minutes)</Label>
-              <Input
-                id="duration"
-                type="number"
-                value={newStop.duration}
-                onChange={(e) => setNewStop(prev => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
-                placeholder="30"
-              />
-            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={newStop.duration}
+                      onChange={(e) => setNewStop(prev => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
+                      placeholder="30"
+                    />
+                  </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priority</Label>
-              <Select value={newStop.priority} onValueChange={(value: any) => setNewStop(prev => ({ ...prev, priority: value }))}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select value={newStop.priority} onValueChange={(value: any) => setNewStop(prev => ({ ...prev, priority: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
-            <Input
-              id="notes"
-              value={newStop.notes}
-              onChange={(e) => setNewStop(prev => ({ ...prev, notes: e.target.value }))}
-              placeholder="Additional notes for this stop"
-            />
-          </div>
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    id="notes"
+                    value={newStop.notes}
+                    onChange={(e) => setNewStop(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Additional notes for this stop"
+                  />
+                </div>
 
-          <Button onClick={addStop} className="w-full">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Stop
-          </Button>
+                <Button onClick={addStopFromForm} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Stop
+                </Button>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="map" className="space-y-4">
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Click on the map to add stops to your route. The route will be automatically calculated and displayed.
+                </p>
+                <div 
+                  ref={mapRef} 
+                  className="w-full h-96 border rounded-lg"
+                  style={{ minHeight: '400px' }}
+                />
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Address *</Label>
+                    <Input
+                      id="address"
+                      value={newStop.address}
+                      onChange={(e) => setNewStop(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="Enter stop address"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="expectedTime">Expected Time *</Label>
+                    <Input
+                      id="expectedTime"
+                      type="time"
+                      value={newStop.expectedTime}
+                      onChange={(e) => setNewStop(prev => ({ ...prev, expectedTime: e.target.value }))}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="duration">Duration (minutes)</Label>
+                    <Input
+                      id="duration"
+                      type="number"
+                      value={newStop.duration}
+                      onChange={(e) => setNewStop(prev => ({ ...prev, duration: parseInt(e.target.value) || 30 }))}
+                      placeholder="30"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="priority">Priority</Label>
+                    <Select value={newStop.priority} onValueChange={(value: any) => setNewStop(prev => ({ ...prev, priority: value }))}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="low">Low</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="notes">Notes</Label>
+                  <Input
+                    id="notes"
+                    value={newStop.notes}
+                    onChange={(e) => setNewStop(prev => ({ ...prev, notes: e.target.value }))}
+                    placeholder="Additional notes for this stop"
+                  />
+                </div>
+
+                <Button onClick={addStop} className="w-full">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Stop Manually
+                </Button>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           {stops.length > 0 && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Order</TableHead>
-                  <TableHead>Address</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Duration</TableHead>
-                  <TableHead>Priority</TableHead>
-                  <TableHead>Notes</TableHead>
-                  <TableHead></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stops.map((stop, index) => (
-                  <TableRow key={stop.id}>
-                    <TableCell>
-                      <Badge variant="outline">{index + 1}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <MapPin className="h-4 w-4 text-blue-600" />
-                        <span className="truncate max-w-xs">{stop.address}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-3 w-3 text-gray-500" />
-                        <span>{stop.expectedTime}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{stop.duration} min</TableCell>
-                    <TableCell>
-                      <Badge className={getPriorityColor(stop.priority)}>
-                        {stop.priority}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="truncate max-w-xs">{stop.notes || '-'}</TableCell>
-                    <TableCell>
-                      <Button variant="ghost" size="sm" onClick={() => removeStop(stop.id)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+            <div className="mt-6">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Order</TableHead>
+                    <TableHead>Address</TableHead>
+                    <TableHead>Time</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Priority</TableHead>
+                    <TableHead>Notes</TableHead>
+                    <TableHead></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {stops.map((stop, index) => (
+                    <TableRow key={stop.id}>
+                      <TableCell>
+                        <Badge variant="outline">{index + 1}</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          <MapPin className="h-4 w-4 text-blue-600" />
+                          <span className="truncate max-w-xs">{stop.address}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-1">
+                          <Clock className="h-3 w-3 text-gray-500" />
+                          <span>{stop.expectedTime}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{stop.duration} min</TableCell>
+                      <TableCell>
+                        <Badge className={getPriorityColor(stop.priority)}>
+                          {stop.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="truncate max-w-xs">{stop.notes || '-'}</TableCell>
+                      <TableCell>
+                        <Button variant="ghost" size="sm" onClick={() => removeStop(stop.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
