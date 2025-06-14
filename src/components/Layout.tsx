@@ -1,20 +1,64 @@
-
 import React from 'react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
-import { Users, DollarSign, FileText, CheckCircle, Building, Settings, Home, UserCheck, Wallet, CreditCard } from 'lucide-react';
+import { Users, DollarSign, FileText, CheckCircle, Building, Settings, Home, UserCheck, Wallet, CreditCard, LayoutDashboard, TrendingUp, Receipt } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home },
-  { title: "Service Agents", url: "/agents", icon: Users },
-  { title: "HRMS", url: "/hrms", icon: UserCheck },
-  { title: "Financial Transactions", url: "/transactions", icon: DollarSign },
-  { title: "Fee Collection", url: "/fees", icon: Wallet },
-  { title: "Commission Approval", url: "/commissions", icon: CheckCircle },
-  { title: "Reimbursements", url: "/reimbursements", icon: CreditCard },
-  { title: "Bank Details", url: "/bank-details", icon: Building },
-  { title: "Approvals", url: "/approvals", icon: FileText },
-  { title: "Settings", url: "/settings", icon: Settings },
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Service Agents",
+    url: "/agents",
+    icon: Users,
+  },
+  {
+    title: "HRMS",
+    url: "/hrms", 
+    icon: UserCheck,
+  },
+  {
+    title: "Financial Transactions",
+    url: "/transactions",
+    icon: CreditCard,
+  },
+  {
+    title: "Fee Collection",
+    url: "/fees",
+    icon: DollarSign,
+  },
+  {
+    title: "Commission Approval",
+    url: "/commissions",
+    icon: TrendingUp,
+  },
+  {
+    title: "Service Pricing",
+    url: "/pricing",
+    icon: Settings,
+  },
+  {
+    title: "Reimbursements",
+    url: "/reimbursements",
+    icon: Receipt,
+  },
+  {
+    title: "Bank Details",
+    url: "/bank-details",
+    icon: Building,
+  },
+  {
+    title: "Approval Workflow",
+    url: "/approvals",
+    icon: CheckCircle,
+  },
+  {
+    title: "Settings",
+    url: "/settings",
+    icon: Settings,
+  },
 ];
 
 function AppSidebar() {

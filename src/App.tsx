@@ -9,6 +9,9 @@ import Dashboard from "./components/Dashboard";
 import ServiceAgents from "./components/ServiceAgents";
 import HRMS from "./components/HRMS";
 import FinancialTransactions from "./components/FinancialTransactions";
+import FeeCollection from "./components/FeeCollection";
+import CommissionApproval from "./components/CommissionApproval";
+import ServicePriceSetting from "./components/ServicePriceSetting";
 import Reimbursements from "./components/Reimbursements";
 import BankDetails from "./components/BankDetails";
 import ApprovalWorkflow from "./components/ApprovalWorkflow";
@@ -29,8 +32,9 @@ const App = () => (
             <Route path="/agents" element={<ServiceAgents />} />
             <Route path="/hrms" element={<HRMS />} />
             <Route path="/transactions" element={<FinancialTransactions />} />
-            <Route path="/fees" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">Fee Collection</h2><p className="text-muted-foreground mt-2">Fee collection management coming soon...</p></div>} />
-            <Route path="/commissions" element={<div className="text-center py-12"><h2 className="text-2xl font-bold">Commission Management</h2><p className="text-muted-foreground mt-2">Commission approval features coming soon...</p></div>} />
+            <Route path="/fees" element={<FeeCollection />} />
+            <Route path="/commissions" element={<CommissionApproval />} />
+            <Route path="/pricing" element={<ServicePriceSetting />} />
             <Route path="/reimbursements" element={<Reimbursements />} />
             <Route path="/bank-details" element={<BankDetails />} />
             <Route path="/approvals" element={<ApprovalWorkflow />} />
