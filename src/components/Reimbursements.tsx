@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Receipt, Plus, Search, Calendar, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Receipt, Search, Calendar, DollarSign, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import NewReimbursementForm from './NewReimbursementForm';
 
 interface Reimbursement {
   id: string;
   employeeName: string;
+  project: string;
   category: string;
   amount: number;
   description: string;
@@ -23,6 +25,7 @@ const mockReimbursements: Reimbursement[] = [
   {
     id: '1',
     employeeName: 'John Smith',
+    project: 'Project Alpha',
     category: 'Travel',
     amount: 450.00,
     description: 'Flight tickets for client meeting in Chicago',
@@ -32,6 +35,7 @@ const mockReimbursements: Reimbursement[] = [
   {
     id: '2',
     employeeName: 'Sarah Johnson',
+    project: 'Project Beta',
     category: 'Meals',
     amount: 75.50,
     description: 'Business lunch with prospective client',
@@ -41,6 +45,7 @@ const mockReimbursements: Reimbursement[] = [
   {
     id: '3',
     employeeName: 'Mike Davis',
+    project: 'Project Alpha',
     category: 'Office Supplies',
     amount: 120.00,
     description: 'Stationery and printing materials',
@@ -50,6 +55,7 @@ const mockReimbursements: Reimbursement[] = [
   {
     id: '4',
     employeeName: 'Emily Brown',
+    project: 'Project Gamma',
     category: 'Travel',
     amount: 85.00,
     description: 'Taxi fare for airport transfer',
@@ -63,15 +69,19 @@ export default function Reimbursements() {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterProject, setFilterProject] = useState<string>('all');
   const { toast } = useToast();
+
+  const projects = Array.from(new Set(reimbursements.map(r => r.project)));
 
   const filteredReimbursements = reimbursements.filter(reimbursement => {
     const matchesSearch = reimbursement.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          reimbursement.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || reimbursement.category === filterCategory;
     const matchesStatus = filterStatus === 'all' || reimbursement.status === filterStatus;
+    const matchesProject = filterProject === 'all' || reimbursement.project === filterProject;
     
-    return matchesSearch && matchesCategory && matchesStatus;
+    return matchesSearch && matchesCategory && matchesStatus && matchesProject;
   });
 
   const getStatusColor = (status: string) => {
@@ -104,6 +114,10 @@ export default function Reimbursements() {
     });
   };
 
+  const handleNewReimbursement = (newReimbursement: Reimbursement) => {
+    setReimbursements(prev => [newReimbursement, ...prev]);
+  };
+
   const totalAmount = reimbursements.reduce((sum, r) => sum + r.amount, 0);
   const pendingAmount = reimbursements.filter(r => r.status === 'pending').reduce((sum, r) => sum + r.amount, 0);
   const approvedAmount = reimbursements.filter(r => r.status === 'approved').reduce((sum, r) => sum + r.amount, 0);
@@ -114,12 +128,9 @@ export default function Reimbursements() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Reimbursements</h1>
-          <p className="text-gray-600 mt-2">Manage employee expense reimbursements</p>
+          <p className="text-gray-600 mt-2">Manage employee expense reimbursements across projects</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          New Reimbursement
-        </Button>
+        <NewReimbursementForm onSubmit={handleNewReimbursement} />
       </div>
 
       {/* Summary Cards */}
@@ -179,7 +190,7 @@ export default function Reimbursements() {
           <CardTitle>Reimbursement Requests</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
@@ -189,6 +200,18 @@ export default function Reimbursements() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            
+            <Select value={filterProject} onValueChange={setFilterProject}>
+              <SelectTrigger>
+                <SelectValue placeholder="Filter by project" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Projects</SelectItem>
+                {projects.map(project => (
+                  <SelectItem key={project} value={project}>{project}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             
             <Select value={filterCategory} onValueChange={setFilterCategory}>
               <SelectTrigger>
@@ -200,6 +223,9 @@ export default function Reimbursements() {
                 <SelectItem value="Meals">Meals</SelectItem>
                 <SelectItem value="Office Supplies">Office Supplies</SelectItem>
                 <SelectItem value="Training">Training</SelectItem>
+                <SelectItem value="Equipment">Equipment</SelectItem>
+                <SelectItem value="Communication">Communication</SelectItem>
+                <SelectItem value="Accommodation">Accommodation</SelectItem>
               </SelectContent>
             </Select>
             
@@ -231,6 +257,7 @@ export default function Reimbursements() {
                     <h3 className="font-semibold text-lg">{reimbursement.employeeName}</h3>
                     <p className="text-gray-600">{reimbursement.description}</p>
                     <div className="flex items-center space-x-4 mt-2">
+                      <Badge variant="outline">{reimbursement.project}</Badge>
                       <Badge variant="outline">{reimbursement.category}</Badge>
                       <div className="flex items-center text-sm text-gray-500">
                         <Calendar className="h-4 w-4 mr-1" />
