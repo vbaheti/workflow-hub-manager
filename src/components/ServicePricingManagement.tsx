@@ -27,6 +27,7 @@ interface PricingRule {
   version: number;
   createdAt: string;
   createdBy: string;
+  ruleSetId: string; // Links all 4 stages together
 }
 
 interface PricingHistory {
@@ -37,6 +38,12 @@ interface PricingHistory {
   timestamp: string;
   userId: string;
   userName: string;
+}
+
+interface StageRule {
+  stage: 'initial' | 'processing' | 'completion' | 'delivery';
+  amount: string;
+  baseAmount?: string;
 }
 
 const mockPricingRules: PricingRule[] = [
@@ -51,21 +58,50 @@ const mockPricingRules: PricingRule[] = [
     projectId: 'project-alpha',
     version: 1,
     createdAt: '2024-01-15',
-    createdBy: 'Manager'
+    createdBy: 'Manager',
+    ruleSetId: 'RS-001'
   },
   {
     id: 'PR-002',
     serviceName: 'Legal Consultation',
     category: 'Legal Services',
-    stage: 'completion',
-    pricingType: 'percentage',
-    amount: 15,
-    baseAmount: 5000,
+    stage: 'processing',
+    pricingType: 'fixed',
+    amount: 3000,
     isActive: true,
     projectId: 'project-alpha',
     version: 1,
     createdAt: '2024-01-15',
-    createdBy: 'Manager'
+    createdBy: 'Manager',
+    ruleSetId: 'RS-001'
+  },
+  {
+    id: 'PR-003',
+    serviceName: 'Legal Consultation',
+    category: 'Legal Services',
+    stage: 'completion',
+    pricingType: 'fixed',
+    amount: 1500,
+    isActive: true,
+    projectId: 'project-alpha',
+    version: 1,
+    createdAt: '2024-01-15',
+    createdBy: 'Manager',
+    ruleSetId: 'RS-001'
+  },
+  {
+    id: 'PR-004',
+    serviceName: 'Legal Consultation',
+    category: 'Legal Services',
+    stage: 'delivery',
+    pricingType: 'fixed',
+    amount: 500,
+    isActive: true,
+    projectId: 'project-alpha',
+    version: 1,
+    createdAt: '2024-01-15',
+    createdBy: 'Manager',
+    ruleSetId: 'RS-001'
   }
 ];
 
@@ -85,18 +121,22 @@ export default function ServicePricingManagement() {
   const [pricingRules, setPricingRules] = useState<PricingRule[]>(mockPricingRules);
   const [history, setHistory] = useState<PricingHistory[]>(mockHistory);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [editingRule, setEditingRule] = useState<PricingRule | null>(null);
+  const [editingRuleSet, setEditingRuleSet] = useState<string | null>(null);
   const { toast } = useToast();
   const { currentProject } = useProject();
   const { hasPermission, currentUser } = useRBAC();
 
-  const [newRule, setNewRule] = useState({
+  const [newRuleSet, setNewRuleSet] = useState({
     serviceName: '',
     category: '',
-    stage: 'initial' as const,
     pricingType: 'fixed' as const,
-    amount: '',
-    baseAmount: ''
+    baseAmount: '',
+    stages: {
+      initial: { stage: 'initial' as const, amount: '', baseAmount: '' },
+      processing: { stage: 'processing' as const, amount: '', baseAmount: '' },
+      completion: { stage: 'completion' as const, amount: '', baseAmount: '' },
+      delivery: { stage: 'delivery' as const, amount: '', baseAmount: '' }
+    }
   });
 
   const categories = ['Legal Services', 'Administrative', 'Registration', 'Financial', 'Consultation'];
@@ -110,93 +150,140 @@ export default function ServicePricingManagement() {
   const canEdit = hasPermission('manage_pricing');
   const projectRules = pricingRules.filter(rule => rule.projectId === currentProject?.id);
 
-  const getCurrentPricingType = (isEditing: boolean): 'fixed' | 'percentage' => {
-    return isEditing ? editingRule?.pricingType || 'fixed' : newRule.pricingType;
+  // Group rules by service and category
+  const groupedRules = projectRules.reduce((acc, rule) => {
+    const key = `${rule.serviceName}-${rule.category}-${rule.ruleSetId}`;
+    if (!acc[key]) {
+      acc[key] = {
+        serviceName: rule.serviceName,
+        category: rule.category,
+        pricingType: rule.pricingType,
+        ruleSetId: rule.ruleSetId,
+        version: rule.version,
+        isActive: rule.isActive,
+        stages: {}
+      };
+    }
+    acc[key].stages[rule.stage] = rule;
+    return acc;
+  }, {} as Record<string, any>);
+
+  const calculateTotal = () => {
+    if (newRuleSet.pricingType === 'fixed') {
+      return Object.values(newRuleSet.stages).reduce((sum, stage) => {
+        return sum + (parseFloat(stage.amount) || 0);
+      }, 0);
+    } else {
+      return Object.values(newRuleSet.stages).reduce((sum, stage) => {
+        return sum + (parseFloat(stage.amount) || 0);
+      }, 0);
+    }
   };
 
-  const handleAddRule = () => {
-    if (!newRule.serviceName || !newRule.category || !newRule.amount) {
+  const validateRuleSet = () => {
+    // Check if all required fields are filled
+    if (!newRuleSet.serviceName || !newRuleSet.category) {
+      return "Please fill in service name and category";
+    }
+
+    // Check if all stage amounts are filled
+    const stageAmounts = Object.values(newRuleSet.stages);
+    if (stageAmounts.some(stage => !stage.amount)) {
+      return "Please fill in amounts for all stages";
+    }
+
+    // For percentage type, check if total equals 100%
+    if (newRuleSet.pricingType === 'percentage') {
+      if (!newRuleSet.baseAmount) {
+        return "Base amount is required for percentage pricing";
+      }
+      const total = calculateTotal();
+      if (Math.abs(total - 100) > 0.01) {
+        return `Percentage total must equal 100%. Current total: ${total.toFixed(2)}%`;
+      }
+    }
+
+    return null;
+  };
+
+  const handleAddRuleSet = () => {
+    const validationError = validateRuleSet();
+    if (validationError) {
       toast({
-        title: "Error",
-        description: "Please fill in all required fields",
+        title: "Validation Error",
+        description: validationError,
         variant: "destructive"
       });
       return;
     }
 
-    const currentPricingType = getCurrentPricingType(false);
-    if (currentPricingType === 'percentage' && !newRule.baseAmount) {
-      toast({
-        title: "Error",
-        description: "Base amount is required for percentage pricing",
-        variant: "destructive"
-      });
-      return;
-    }
+    const ruleSetId = `RS-${String(Object.keys(groupedRules).length + 1).padStart(3, '0')}`;
+    const newRules: PricingRule[] = [];
 
-    const rule: PricingRule = {
-      id: `PR-${String(pricingRules.length + 1).padStart(3, '0')}`,
-      serviceName: newRule.serviceName,
-      category: newRule.category,
-      stage: newRule.stage,
-      pricingType: newRule.pricingType,
-      amount: parseFloat(newRule.amount),
-      baseAmount: newRule.baseAmount ? parseFloat(newRule.baseAmount) : undefined,
-      isActive: true,
-      projectId: currentProject?.id || '',
-      version: 1,
-      createdAt: new Date().toISOString().split('T')[0],
-      createdBy: currentUser?.name || 'Current User'
-    };
+    Object.entries(newRuleSet.stages).forEach(([stageKey, stage], index) => {
+      const rule: PricingRule = {
+        id: `PR-${String(pricingRules.length + index + 1).padStart(3, '0')}`,
+        serviceName: newRuleSet.serviceName,
+        category: newRuleSet.category,
+        stage: stage.stage,
+        pricingType: newRuleSet.pricingType,
+        amount: parseFloat(stage.amount),
+        baseAmount: newRuleSet.baseAmount ? parseFloat(newRuleSet.baseAmount) : undefined,
+        isActive: true,
+        projectId: currentProject?.id || '',
+        version: 1,
+        createdAt: new Date().toISOString().split('T')[0],
+        createdBy: currentUser?.name || 'Current User',
+        ruleSetId: ruleSetId
+      };
+      newRules.push(rule);
+    });
 
-    setPricingRules([...pricingRules, rule]);
-    addToHistory(rule.id, 'created', { amount: rule.amount, pricingType: rule.pricingType });
-    setNewRule({ serviceName: '', category: '', stage: 'initial', pricingType: 'fixed', amount: '', baseAmount: '' });
+    setPricingRules([...pricingRules, ...newRules]);
+    
+    // Add to history for each rule
+    newRules.forEach(rule => {
+      addToHistory(rule.id, 'created', { amount: rule.amount, pricingType: rule.pricingType });
+    });
+
+    // Reset form
+    setNewRuleSet({
+      serviceName: '',
+      category: '',
+      pricingType: 'fixed',
+      baseAmount: '',
+      stages: {
+        initial: { stage: 'initial', amount: '', baseAmount: '' },
+        processing: { stage: 'processing', amount: '', baseAmount: '' },
+        completion: { stage: 'completion', amount: '', baseAmount: '' },
+        delivery: { stage: 'delivery', amount: '', baseAmount: '' }
+      }
+    });
     setShowAddForm(false);
     
     toast({
       title: "Success",
-      description: "Pricing rule added successfully"
+      description: "Pricing rule set added successfully"
     });
   };
 
-  const handleUpdateRule = (rule: PricingRule) => {
-    const oldRule = pricingRules.find(r => r.id === rule.id);
-    const changes: Record<string, any> = {};
+  const toggleRuleSetStatus = (ruleSetId: string) => {
+    const ruleSetRules = pricingRules.filter(r => r.ruleSetId === ruleSetId);
+    const newStatus = !ruleSetRules[0]?.isActive;
     
-    if (oldRule) {
-      if (oldRule.amount !== rule.amount) changes.amount = { from: oldRule.amount, to: rule.amount };
-      if (oldRule.pricingType !== rule.pricingType) changes.pricingType = { from: oldRule.pricingType, to: rule.pricingType };
-    }
-
     setPricingRules(pricingRules.map(r => 
-      r.id === rule.id 
-        ? { ...rule, version: r.version + 1, createdAt: new Date().toISOString().split('T')[0] }
+      r.ruleSetId === ruleSetId 
+        ? { ...r, isActive: newStatus, version: r.version + 1 }
         : r
     ));
     
-    addToHistory(rule.id, 'updated', changes);
-    setEditingRule(null);
-    
-    toast({
-      title: "Success",
-      description: "Pricing rule updated successfully"
+    ruleSetRules.forEach(rule => {
+      addToHistory(rule.id, 'deactivated', { isActive: newStatus });
     });
-  };
-
-  const toggleRuleStatus = (id: string) => {
-    const rule = pricingRules.find(r => r.id === id);
-    setPricingRules(pricingRules.map(r => 
-      r.id === id 
-        ? { ...r, isActive: !r.isActive, version: r.version + 1 }
-        : r
-    ));
-    
-    addToHistory(id, 'deactivated', { isActive: !rule?.isActive });
     
     toast({
       title: "Success",
-      description: "Rule status updated successfully"
+      description: "Rule set status updated successfully"
     });
   };
 
@@ -213,8 +300,13 @@ export default function ServicePricingManagement() {
     setHistory([historyEntry, ...history]);
   };
 
-  const activeRules = projectRules.filter(r => r.isActive).length;
-  const totalValue = projectRules.reduce((sum, r) => sum + (r.pricingType === 'fixed' ? r.amount : r.baseAmount || 0), 0);
+  const activeRuleSets = Object.values(groupedRules).filter(rs => rs.isActive).length;
+  const totalValue = Object.values(groupedRules).reduce((sum, rs) => {
+    const stageValues = Object.values(rs.stages).reduce((stageSum: number, rule: any) => {
+      return stageSum + (rule.pricingType === 'fixed' ? rule.amount : rule.baseAmount || 0);
+    }, 0);
+    return sum + stageValues;
+  }, 0);
 
   if (!currentProject) {
     return (
@@ -232,12 +324,12 @@ export default function ServicePricingManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Service Pricing - {currentProject.name}</h2>
-          <p className="text-muted-foreground">Manage project-specific pricing rules and commission rates</p>
+          <p className="text-muted-foreground">Manage project-specific pricing rules with all 4 stages</p>
         </div>
         <PermissionGate permissions={['manage_pricing']}>
           <Button onClick={() => setShowAddForm(true)} className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Add Pricing Rule
+            Add Pricing Rule Set
           </Button>
         </PermissionGate>
       </div>
@@ -246,12 +338,12 @@ export default function ServicePricingManagement() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active Rules</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Active Rule Sets</CardTitle>
             <Settings className="h-4 w-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{activeRules}</div>
-            <p className="text-xs text-muted-foreground">of {projectRules.length} total</p>
+            <div className="text-2xl font-bold text-blue-600">{activeRuleSets}</div>
+            <p className="text-xs text-muted-foreground">of {Object.keys(groupedRules).length} total</p>
           </CardContent>
         </Card>
         
@@ -268,21 +360,21 @@ export default function ServicePricingManagement() {
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Avg Rule Value</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Avg Rule Set Value</CardTitle>
             <TrendingUp className="h-4 w-4 text-purple-600" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-purple-600">
-              ${projectRules.length > 0 ? Math.round(totalValue / projectRules.length).toLocaleString() : 0}
+              ${Object.keys(groupedRules).length > 0 ? Math.round(totalValue / Object.keys(groupedRules).length).toLocaleString() : 0}
             </div>
-            <p className="text-xs text-muted-foreground">Per pricing rule</p>
+            <p className="text-xs text-muted-foreground">Per pricing rule set</p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs defaultValue="rules" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="rules">Pricing Rules</TabsTrigger>
+          <TabsTrigger value="rules">Pricing Rule Sets</TabsTrigger>
           <TabsTrigger value="history" className="flex items-center gap-2">
             <History className="h-4 w-4" />
             Version History
@@ -290,35 +382,30 @@ export default function ServicePricingManagement() {
         </TabsList>
 
         <TabsContent value="rules" className="space-y-6">
-          {/* Add/Edit Rule Form */}
-          {(showAddForm || editingRule) && (
+          {/* Add/Edit Rule Set Form */}
+          {showAddForm && (
             <PermissionGate permissions={['manage_pricing']}>
               <Card>
                 <CardHeader>
-                  <CardTitle>{editingRule ? 'Edit Pricing Rule' : 'Add New Pricing Rule'}</CardTitle>
+                  <CardTitle>Add New Pricing Rule Set</CardTitle>
+                  <CardDescription>Define pricing for all 4 stages of a service</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <CardContent className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <Label htmlFor="serviceName">Service Name</Label>
                       <Input
                         id="serviceName"
-                        value={editingRule ? editingRule.serviceName : newRule.serviceName}
-                        onChange={(e) => editingRule 
-                          ? setEditingRule({...editingRule, serviceName: e.target.value})
-                          : setNewRule({...newRule, serviceName: e.target.value})
-                        }
+                        value={newRuleSet.serviceName}
+                        onChange={(e) => setNewRuleSet({...newRuleSet, serviceName: e.target.value})}
                         placeholder="Enter service name"
                       />
                     </div>
                     <div>
                       <Label htmlFor="category">Category</Label>
                       <Select 
-                        value={editingRule ? editingRule.category : newRule.category}
-                        onValueChange={(value) => editingRule
-                          ? setEditingRule({...editingRule, category: value})
-                          : setNewRule({...newRule, category: value})
-                        }
+                        value={newRuleSet.category}
+                        onValueChange={(value) => setNewRuleSet({...newRuleSet, category: value})}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select category" />
@@ -331,32 +418,10 @@ export default function ServicePricingManagement() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="stage">Pricing Stage</Label>
-                      <Select 
-                        value={editingRule ? editingRule.stage : newRule.stage}
-                        onValueChange={(value: any) => editingRule
-                          ? setEditingRule({...editingRule, stage: value})
-                          : setNewRule({...newRule, stage: value})
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select stage" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {stages.map(stage => (
-                            <SelectItem key={stage.value} value={stage.value}>{stage.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
                       <Label htmlFor="pricingType">Pricing Type</Label>
                       <Select 
-                        value={editingRule ? editingRule.pricingType : newRule.pricingType}
-                        onValueChange={(value: any) => editingRule
-                          ? setEditingRule({...editingRule, pricingType: value})
-                          : setNewRule({...newRule, pricingType: value})
-                        }
+                        value={newRuleSet.pricingType}
+                        onValueChange={(value: any) => setNewRuleSet({...newRuleSet, pricingType: value})}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -367,48 +432,65 @@ export default function ServicePricingManagement() {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+
+                  {newRuleSet.pricingType === 'percentage' && (
                     <div>
-                      <Label htmlFor="amount">
-                        {getCurrentPricingType(!!editingRule) === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
-                      </Label>
+                      <Label htmlFor="baseAmount">Base Amount ($)</Label>
                       <Input
-                        id="amount"
+                        id="baseAmount"
                         type="number"
-                        value={editingRule ? editingRule.amount : newRule.amount}
-                        onChange={(e) => editingRule
-                          ? setEditingRule({...editingRule, amount: parseFloat(e.target.value) || 0})
-                          : setNewRule({...newRule, amount: e.target.value})
-                        }
-                        placeholder={`Enter ${getCurrentPricingType(!!editingRule) === 'percentage' ? 'percentage' : 'amount'}`}
+                        value={newRuleSet.baseAmount}
+                        onChange={(e) => setNewRuleSet({...newRuleSet, baseAmount: e.target.value})}
+                        placeholder="Enter base amount for percentage calculation"
                       />
                     </div>
-                    {getCurrentPricingType(!!editingRule) === 'percentage' && (
-                      <div>
-                        <Label htmlFor="baseAmount">Base Amount ($)</Label>
-                        <Input
-                          id="baseAmount"
-                          type="number"
-                          value={editingRule ? editingRule.baseAmount || '' : newRule.baseAmount}
-                          onChange={(e) => editingRule
-                            ? setEditingRule({...editingRule, baseAmount: parseFloat(e.target.value) || 0})
-                            : setNewRule({...newRule, baseAmount: e.target.value})
-                          }
-                          placeholder="Enter base amount for percentage calculation"
-                        />
-                      </div>
-                    )}
+                  )}
+
+                  <div>
+                    <Label className="text-base font-semibold">Stage Breakdown</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-2">
+                      {stages.map(stage => (
+                        <div key={stage.value} className="space-y-2 p-4 border rounded-lg">
+                          <Label className="font-medium">{stage.label}</Label>
+                          <Input
+                            type="number"
+                            value={newRuleSet.stages[stage.value as keyof typeof newRuleSet.stages].amount}
+                            onChange={(e) => setNewRuleSet({
+                              ...newRuleSet,
+                              stages: {
+                                ...newRuleSet.stages,
+                                [stage.value]: {
+                                  ...newRuleSet.stages[stage.value as keyof typeof newRuleSet.stages],
+                                  amount: e.target.value
+                                }
+                              }
+                            })}
+                            placeholder={newRuleSet.pricingType === 'percentage' ? '% of base' : 'Amount ($)'}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
+
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <span className="font-medium">Total:</span>
+                    <span className="text-lg font-bold">
+                      {newRuleSet.pricingType === 'fixed' 
+                        ? `$${calculateTotal().toLocaleString()}`
+                        : `${calculateTotal().toFixed(2)}%`
+                      }
+                    </span>
+                  </div>
+
                   <div className="flex gap-2">
-                    <Button onClick={editingRule ? () => handleUpdateRule(editingRule) : handleAddRule}>
+                    <Button onClick={handleAddRuleSet}>
                       <Save className="h-4 w-4 mr-2" />
-                      {editingRule ? 'Update Rule' : 'Add Rule'}
+                      Add Rule Set
                     </Button>
                     <Button 
                       variant="outline" 
-                      onClick={() => {
-                        setShowAddForm(false);
-                        setEditingRule(null);
-                      }}
+                      onClick={() => setShowAddForm(false)}
                     >
                       <X className="h-4 w-4 mr-2" />
                       Cancel
@@ -419,11 +501,11 @@ export default function ServicePricingManagement() {
             </PermissionGate>
           )}
 
-          {/* Pricing Rules Table */}
+          {/* Pricing Rule Sets Table */}
           <Card>
             <CardHeader>
-              <CardTitle>Current Pricing Rules</CardTitle>
-              <CardDescription>Project-specific pricing configuration</CardDescription>
+              <CardTitle>Current Pricing Rule Sets</CardTitle>
+              <CardDescription>Project-specific pricing configuration with all stages</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>
@@ -431,63 +513,80 @@ export default function ServicePricingManagement() {
                   <TableRow>
                     <TableHead>Service</TableHead>
                     <TableHead>Category</TableHead>
-                    <TableHead>Stage</TableHead>
                     <TableHead>Type</TableHead>
-                    <TableHead>Amount</TableHead>
+                    <TableHead>Initial</TableHead>
+                    <TableHead>Processing</TableHead>
+                    <TableHead>Completion</TableHead>
+                    <TableHead>Delivery</TableHead>
+                    <TableHead>Total</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Version</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {projectRules.map((rule) => (
-                    <TableRow key={rule.id}>
-                      <TableCell className="font-medium">{rule.serviceName}</TableCell>
-                      <TableCell>{rule.category}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {stages.find(s => s.value === rule.stage)?.label}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={rule.pricingType === 'fixed' ? 'default' : 'secondary'}>
-                          {rule.pricingType === 'fixed' ? 'Fixed' : 'Percentage'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="font-semibold">
-                        {rule.pricingType === 'fixed' 
-                          ? `$${rule.amount.toLocaleString()}`
-                          : `${rule.amount}% of $${rule.baseAmount?.toLocaleString()}`
-                        }
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={rule.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-                          {rule.isActive ? 'Active' : 'Inactive'}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>v{rule.version}</TableCell>
-                      <TableCell>
-                        <PermissionGate permissions={['manage_pricing']}>
-                          <div className="flex gap-2">
+                  {Object.values(groupedRules).map((ruleSet: any) => {
+                    const total = Object.values(ruleSet.stages).reduce((sum: number, rule: any) => {
+                      return sum + (rule.pricingType === 'fixed' ? rule.amount : rule.amount);
+                    }, 0);
+                    
+                    return (
+                      <TableRow key={ruleSet.ruleSetId}>
+                        <TableCell className="font-medium">{ruleSet.serviceName}</TableCell>
+                        <TableCell>{ruleSet.category}</TableCell>
+                        <TableCell>
+                          <Badge variant={ruleSet.pricingType === 'fixed' ? 'default' : 'secondary'}>
+                            {ruleSet.pricingType === 'fixed' ? 'Fixed' : 'Percentage'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {ruleSet.pricingType === 'fixed' 
+                            ? `$${ruleSet.stages.initial?.amount?.toLocaleString() || 0}`
+                            : `${ruleSet.stages.initial?.amount || 0}%`
+                          }
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {ruleSet.pricingType === 'fixed' 
+                            ? `$${ruleSet.stages.processing?.amount?.toLocaleString() || 0}`
+                            : `${ruleSet.stages.processing?.amount || 0}%`
+                          }
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {ruleSet.pricingType === 'fixed' 
+                            ? `$${ruleSet.stages.completion?.amount?.toLocaleString() || 0}`
+                            : `${ruleSet.stages.completion?.amount || 0}%`
+                          }
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {ruleSet.pricingType === 'fixed' 
+                            ? `$${ruleSet.stages.delivery?.amount?.toLocaleString() || 0}`
+                            : `${ruleSet.stages.delivery?.amount || 0}%`
+                          }
+                        </TableCell>
+                        <TableCell className="font-bold text-blue-600">
+                          {ruleSet.pricingType === 'fixed' 
+                            ? `$${total.toLocaleString()}`
+                            : `${total}%`
+                          }
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={ruleSet.isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                            {ruleSet.isActive ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <PermissionGate permissions={['manage_pricing']}>
                             <Button 
                               size="sm" 
                               variant="outline"
-                              onClick={() => setEditingRule(rule)}
+                              onClick={() => toggleRuleSetStatus(ruleSet.ruleSetId)}
                             >
-                              <Edit className="h-4 w-4" />
+                              {ruleSet.isActive ? 'Deactivate' : 'Activate'}
                             </Button>
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              onClick={() => toggleRuleStatus(rule.id)}
-                            >
-                              {rule.isActive ? 'Deactivate' : 'Activate'}
-                            </Button>
-                          </div>
-                        </PermissionGate>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                          </PermissionGate>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
