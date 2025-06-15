@@ -1,31 +1,7 @@
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
+import { TrainingCamp, TrainingTarget, TrainingStats, getCompletionRate } from '@/components/training-services/TrainingServicesUtils';
 
-export interface TrainingCamp {
-  id: string;
-  agentId: number;
-  agentName: string;
-  trainerId: number;
-  trainerName: string;
-  campName: string;
-  location: string;
-  state: string;
-  district: string;
-  taluk: string;
-  village: string;
-  startDate: Date;
-  endDate: Date;
-  targetCitizens: number;
-  registeredCitizens: number;
-  completedCitizens: number;
-  trainingType: 'skill_development' | 'awareness' | 'capacity_building' | 'livelihood';
-  status: 'planned' | 'ongoing' | 'completed' | 'me_pending';
-  meCompletedDate?: Date;
-  meScore?: number;
-  campFeedback?: string;
-}
-
-// Mock data that would typically come from agent app
 const mockTrainingCamps: TrainingCamp[] = [
   {
     id: '1',
@@ -73,46 +49,78 @@ const mockTrainingCamps: TrainingCamp[] = [
   }
 ];
 
+const mockTrainingTargets: TrainingTarget[] = [
+  {
+    id: '1',
+    agentId: 1,
+    agentName: 'Rajesh Kumar',
+    targetCamps: 5,
+    targetCitizens: 200,
+    actualCamps: 3,
+    actualCitizens: 142,
+    period: 'Q2 2024'
+  },
+  {
+    id: '2',
+    agentId: 2,
+    agentName: 'Priya Sharma',
+    targetCamps: 4,
+    targetCitizens: 150,
+    actualCamps: 4,
+    actualCitizens: 168,
+    period: 'Q2 2024'
+  },
+  {
+    id: '3',
+    agentId: 3,
+    agentName: 'Ahmed Hassan',
+    targetCamps: 3,
+    targetCitizens: 120,
+    actualCamps: 2,
+    actualCitizens: 85,
+    period: 'Q2 2024'
+  }
+];
+
 export const useTrainingData = () => {
-  const getAgentTrainingStats = (agentId: number) => {
-    const agentCamps = mockTrainingCamps.filter(camp => camp.agentId === agentId);
-    const totalCamps = agentCamps.length;
-    const completedCamps = agentCamps.filter(camp => camp.status === 'completed').length;
-    const totalCitizensTrained = agentCamps.reduce((sum, camp) => sum + camp.completedCitizens, 0);
-    const pendingMECamps = agentCamps.filter(camp => camp.status === 'me_pending').length;
-    
-    return {
-      totalCamps,
-      completedCamps,
-      totalCitizensTrained,
-      pendingMECamps
-    };
-  };
+  const [camps] = useState<TrainingCamp[]>(mockTrainingCamps);
+  const [targets, setTargets] = useState<TrainingTarget[]>(mockTrainingTargets);
 
-  const getOverallTrainingStats = () => {
-    const totalCamps = mockTrainingCamps.length;
-    const completedCamps = mockTrainingCamps.filter(camp => camp.status === 'completed').length;
-    const totalCitizensTrained = mockTrainingCamps.reduce((sum, camp) => sum + camp.completedCitizens, 0);
-    const avgCitizensPerCamp = totalCamps > 0 ? totalCitizensTrained / totalCamps : 0;
-    const completionRate = totalCamps > 0 ? (completedCamps / totalCamps) * 100 : 0;
-    
-    return {
-      totalCamps,
-      completedCamps,
-      totalCitizensTrained,
-      avgCitizensPerCamp,
-      completionRate
-    };
-  };
+  const overallStats = useMemo((): TrainingStats => {
+    const totalCamps = camps.length;
+    const completedCamps = camps.filter(c => c.status === 'completed').length;
+    const totalCitizensServed = camps.reduce((sum, c) => sum + c.completedCitizens, 0);
+    const avgCompletionRate = camps.length > 0 
+      ? camps.reduce((sum, c) => sum + getCompletionRate(c.completedCitizens, c.targetCitizens), 0) / camps.length 
+      : 0;
 
-  const getTrainingCampsByAgent = (agentId: number) => {
-    return mockTrainingCamps.filter(camp => camp.agentId === agentId);
+    const targetCamps = targets.reduce((sum, t) => sum + t.targetCamps, 0);
+    const targetCitizens = targets.reduce((sum, t) => sum + t.targetCitizens, 0);
+    const campsAchievementRate = targetCamps > 0 ? (totalCamps / targetCamps) * 100 : 0;
+    const citizensAchievementRate = targetCitizens > 0 ? (totalCitizensServed / targetCitizens) * 100 : 0;
+
+    return { 
+      totalCamps, 
+      completedCamps, 
+      totalCitizensServed, 
+      avgCompletionRate,
+      targetCamps,
+      targetCitizens,
+      campsAchievementRate,
+      citizensAchievementRate
+    };
+  }, [camps, targets]);
+
+  const handleUpdateTarget = (updatedTarget: TrainingTarget) => {
+    setTargets(prev => prev.map(target => 
+      target.id === updatedTarget.id ? updatedTarget : target
+    ));
   };
 
   return {
-    trainingCamps: mockTrainingCamps,
-    getAgentTrainingStats,
-    getOverallTrainingStats,
-    getTrainingCampsByAgent
+    camps,
+    targets,
+    overallStats,
+    handleUpdateTarget,
   };
 };
