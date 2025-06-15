@@ -12,7 +12,7 @@ interface TrainingServicesProps {
 }
 
 const TrainingServices = ({ agents }: TrainingServicesProps) => {
-  const [camps, setCamps] = useState<TrainingCamp[]>([
+  const [camps] = useState<TrainingCamp[]>([
     {
       id: '1',
       agentId: 1,
@@ -79,10 +79,8 @@ const TrainingServices = ({ agents }: TrainingServicesProps) => {
 
       <TrainingServicesDashboard stats={stats} />
 
-      {/* Target vs Actual Analysis */}
       <TargetVsActualAnalysis targets={targets} />
 
-      {/* Target Setting */}
       <TrainingTargetSetting 
         targets={targets} 
         agents={agents} 
