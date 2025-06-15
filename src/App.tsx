@@ -14,6 +14,8 @@ import HRMS from './components/HRMS';
 import Settings from './components/Settings';
 import CommissionApproval from './components/CommissionApproval';
 import ApprovalWorkflow from './components/ApprovalWorkflow';
+import ServicePriceSetting from './components/ServicePriceSetting';
+import BankDetails from './components/BankDetails';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { StateProvider } from './contexts/StateContext';
 import { RBACProvider } from './contexts/RBACContext';
@@ -37,6 +39,8 @@ function App() {
                   <Route path="/reimbursements" element={<Reimbursements />} />
                   <Route path="/hrms" element={<HRMS />} />
                   <Route path="/commissions" element={<CommissionApproval />} />
+                  <Route path="/pricing" element={<ServicePriceSetting />} />
+                  <Route path="/bank-details" element={<BankDetails />} />
                   <Route path="/approvals" element={<ApprovalWorkflow />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Users, DollarSign, FileText, CheckCircle, Building, Settings, Home, UserCheck, Wallet, CreditCard, LayoutDashboard, TrendingUp, Receipt } from 'lucide-react';

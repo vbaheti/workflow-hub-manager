@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Route, BarChart3, Truck, DollarSign, Building2 } from 'lucide-react';
+import { Users, Route, BarChart3, Truck } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useRBAC } from '../contexts/RBACContext';
 import AddNewAgentForm from './AddNewAgentForm';
@@ -12,8 +12,6 @@ import ServiceAgentsManagement from './ServiceAgentsManagement';
 import ServiceAgentsAssignment from './ServiceAgentsAssignment';
 import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
-import ServicePriceSetting from './ServicePriceSetting';
-import BankDetails from './BankDetails';
 import PermissionGate from './PermissionGate';
 import { useStateContext } from "../contexts/StateContext";
 
@@ -179,7 +177,7 @@ const ServiceAgents = () => {
         </div>
 
         <Tabs defaultValue="agents" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="agents" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               Agents
@@ -200,18 +198,6 @@ const ServiceAgents = () => {
               <TabsTrigger value="analytics" className="flex items-center gap-2">
                 <BarChart3 className="h-4 w-4" />
                 Analytics
-              </TabsTrigger>
-            )}
-            {hasPermission('manage_pricing') && (
-              <TabsTrigger value="service-pricing" className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                Service Pricing
-              </TabsTrigger>
-            )}
-            {hasPermission('manage_bank_details') && (
-              <TabsTrigger value="bank-details" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Bank Details
               </TabsTrigger>
             )}
           </TabsList>
@@ -260,18 +246,6 @@ const ServiceAgents = () => {
               <ServiceAgentsAnalytics
                 agents={projectAgents}
               />
-            </TabsContent>
-          )}
-
-          {hasPermission('manage_pricing') && (
-            <TabsContent value="service-pricing">
-              <ServicePriceSetting />
-            </TabsContent>
-          )}
-
-          {hasPermission('manage_bank_details') && (
-            <TabsContent value="bank-details">
-              <BankDetails />
             </TabsContent>
           )}
         </Tabs>
