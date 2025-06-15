@@ -110,6 +110,10 @@ export default function ServicePricingManagement() {
   const canEdit = hasPermission('manage_pricing');
   const projectRules = pricingRules.filter(rule => rule.projectId === currentProject?.id);
 
+  const getCurrentPricingType = (isEditing: boolean): 'fixed' | 'percentage' => {
+    return isEditing ? editingRule?.pricingType || 'fixed' : newRule.pricingType;
+  };
+
   const handleAddRule = () => {
     if (!newRule.serviceName || !newRule.category || !newRule.amount) {
       toast({
@@ -120,7 +124,8 @@ export default function ServicePricingManagement() {
       return;
     }
 
-    if (newRule.pricingType === 'percentage' && !newRule.baseAmount) {
+    const currentPricingType = getCurrentPricingType(false);
+    if (currentPricingType === 'percentage' && !newRule.baseAmount) {
       toast({
         title: "Error",
         description: "Base amount is required for percentage pricing",
@@ -364,7 +369,7 @@ export default function ServicePricingManagement() {
                     </div>
                     <div>
                       <Label htmlFor="amount">
-                        {(editingRule ? editingRule.pricingType : newRule.pricingType) === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
+                        {getCurrentPricingType(!!editingRule) === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
                       </Label>
                       <Input
                         id="amount"
@@ -374,10 +379,10 @@ export default function ServicePricingManagement() {
                           ? setEditingRule({...editingRule, amount: parseFloat(e.target.value) || 0})
                           : setNewRule({...newRule, amount: e.target.value})
                         }
-                        placeholder={`Enter ${(editingRule ? editingRule.pricingType : newRule.pricingType) === 'percentage' ? 'percentage' : 'amount'}`}
+                        placeholder={`Enter ${getCurrentPricingType(!!editingRule) === 'percentage' ? 'percentage' : 'amount'}`}
                       />
                     </div>
-                    {((editingRule ? editingRule.pricingType : newRule.pricingType) === 'percentage') && (
+                    {getCurrentPricingType(!!editingRule) === 'percentage' && (
                       <div>
                         <Label htmlFor="baseAmount">Base Amount ($)</Label>
                         <Input
