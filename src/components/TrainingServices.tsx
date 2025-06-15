@@ -5,29 +5,11 @@ import TrainingServicesDashboard from './training-services/TrainingServicesDashb
 import TrainingCampsTable from './training-services/TrainingCampsTable';
 import TrainingTargetSetting from './training-services/TrainingTargetSetting';
 import TargetVsActualAnalysis from './training-services/TargetVsActualAnalysis';
-import { TrainingCamp, TrainingTarget, mockTrainingTargets } from './training-services/TrainingServicesUtils';
+import { TrainingCamp, TrainingTarget, mockTrainingTargets, getOverallStats } from './training-services/TrainingServicesUtils';
 
 interface TrainingServicesProps {
   agents: any[];
 }
-
-const getOverallStats = (camps: TrainingCamp[], targets: TrainingTarget[]) => {
-  const totalCamps = camps.length;
-  const totalCitizensServed = camps.reduce((sum, c) => sum + c.completedCitizens, 0);
-  const targetCamps = targets.reduce((sum, t) => sum + t.targetCamps, 0);
-  const targetCitizens = targets.reduce((sum, t) => sum + t.targetCitizens, 0);
-  const campsAchievementRate = targetCamps > 0 ? (totalCamps / targetCamps) * 100 : 0;
-  const citizensAchievementRate = targetCitizens > 0 ? (totalCitizensServed / targetCitizens) * 100 : 0;
-
-  return { 
-    totalCamps, 
-    totalCitizensServed,
-    targetCamps,
-    targetCitizens,
-    campsAchievementRate,
-    citizensAchievementRate
-  };
-};
 
 const TrainingServices = ({ agents }: TrainingServicesProps) => {
   const [camps] = useState<TrainingCamp[]>([

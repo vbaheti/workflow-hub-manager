@@ -2,15 +2,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Target, GraduationCap, TrendingUp, UserCheck } from 'lucide-react';
-
-interface TrainingStats {
-  targetCamps: number;
-  totalCamps: number;
-  campsAchievementRate: number;
-  targetCitizens: number;
-  totalCitizensServed: number;
-  citizensAchievementRate: number;
-}
+import { TrainingStats } from './TrainingServicesUtils';
 
 interface TrainingServicesDashboardProps {
   stats: TrainingStats;
