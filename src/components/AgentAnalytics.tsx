@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { TrendingUp, Users, MapPin, DollarSign, Award, Calendar } from 'lucide-react';
+import { TrendingUp, Users, MapPin, DollarSign, Award, Calendar, GraduationCap } from 'lucide-react';
 
 interface Agent {
   id: number;
@@ -22,11 +21,20 @@ interface AgentAnalyticsProps {
 
 const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
   const performanceData = [
-    { name: 'John Smith', collections: 45200, routes: 2, efficiency: 92 },
-    { name: 'Emily Chen', collections: 52100, routes: 2, efficiency: 95 },
-    { name: 'Robert Wilson', collections: 41800, routes: 2, efficiency: 88 },
-    { name: 'Sarah Johnson', collections: 38900, routes: 2, efficiency: 85 },
-    { name: 'Mike Davis', collections: 29500, routes: 1, efficiency: 70 }
+    { name: 'Rajesh Kumar', collections: 45200, routes: 2, efficiency: 92, trainingCamps: 2, citizensTrained: 85 },
+    { name: 'Priya Sharma', collections: 52100, routes: 2, efficiency: 95, trainingCamps: 3, citizensTrained: 110 },
+    { name: 'Ahmed Hassan', collections: 41800, routes: 2, efficiency: 88, trainingCamps: 1, citizensTrained: 42 },
+    { name: 'Fatima Al-Zahra', collections: 38900, routes: 2, efficiency: 85, trainingCamps: 2, citizensTrained: 68 },
+    { name: 'Chen Wei Ming', collections: 29500, routes: 1, efficiency: 70, trainingCamps: 1, citizensTrained: 35 }
+  ];
+
+  const trainingMetrics = [
+    { month: 'Jan', camps: 8, citizens: 420, meCompleted: 6 },
+    { month: 'Feb', camps: 10, citizens: 485, meCompleted: 8 },
+    { month: 'Mar', camps: 7, citizens: 365, meCompleted: 5 },
+    { month: 'Apr', camps: 12, citizens: 580, meCompleted: 10 },
+    { month: 'May', camps: 11, citizens: 525, meCompleted: 9 },
+    { month: 'Jun', camps: 9, citizens: 450, meCompleted: 7 }
   ];
 
   const routeCoverageData = [
@@ -62,10 +70,15 @@ const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
   const totalRoutes = agents.reduce((sum, agent) => sum + agent.assignedRoutes.length, 0);
   const avgRoutesPerAgent = totalRoutes / activeAgents;
 
+  // Training metrics calculations
+  const totalTrainingCamps = trainingMetrics.reduce((sum, m) => sum + m.camps, 0);
+  const totalCitizensTrained = trainingMetrics.reduce((sum, m) => sum + m.citizens, 0);
+  const avgCitizensPerCamp = totalCitizensTrained / totalTrainingCamps;
+
   return (
     <div className="space-y-6">
       {/* Key Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
@@ -83,11 +96,24 @@ const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Routes</p>
-                <p className="text-2xl font-bold text-green-600">{totalRoutes}</p>
-                <p className="text-xs text-blue-600">≈ {avgRoutesPerAgent.toFixed(1)} per agent</p>
+                <p className="text-sm font-medium text-gray-600">Training Camps</p>
+                <p className="text-2xl font-bold text-orange-600">{totalTrainingCamps}</p>
+                <p className="text-xs text-blue-600">6 months total</p>
               </div>
-              <MapPin className="h-8 w-8 text-green-600" />
+              <GraduationCap className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Citizens Trained</p>
+                <p className="text-2xl font-bold text-green-600">{totalCitizensTrained}</p>
+                <p className="text-xs text-green-600">≈ {avgCitizensPerCamp.toFixed(0)} per camp</p>
+              </div>
+              <Users className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
@@ -110,7 +136,7 @@ const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Top Performer</p>
-                <p className="text-lg font-bold text-orange-600">Emily Chen</p>
+                <p className="text-lg font-bold text-orange-600">Priya Sharma</p>
                 <p className="text-xs text-green-600">95% efficiency</p>
               </div>
               <Award className="h-8 w-8 text-orange-600" />
@@ -125,7 +151,7 @@ const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5" />
-              Agent Collections Performance
+              Agent Collections & Training Performance
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -134,36 +160,40 @@ const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" fontSize={12} />
                 <YAxis fontSize={12} />
-                <Tooltip formatter={(value) => [`$${value.toLocaleString()}`, 'Collections']} />
+                <Tooltip 
+                  formatter={(value, name) => {
+                    if (name === 'collections') return [`$${value.toLocaleString()}`, 'Collections'];
+                    if (name === 'citizensTrained') return [`${value}`, 'Citizens Trained'];
+                    return [value, name];
+                  }} 
+                />
                 <Bar dataKey="collections" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="citizensTrained" fill="#F97316" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
-        {/* Route Coverage Analysis */}
+        {/* Training Progress Tracking */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5" />
-              Route Coverage by City
+              <GraduationCap className="h-5 w-5" />
+              Monthly Training Progress
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {routeCoverageData.map((city) => (
-              <div key={city.city} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="font-medium">{city.city}</span>
-                  <span className="text-sm text-gray-600">
-                    {city.covered}/{city.total} routes
-                  </span>
-                </div>
-                <Progress value={city.percentage} className="h-2" />
-                <div className="text-xs text-gray-500">
-                  {city.percentage}% coverage
-                </div>
-              </div>
-            ))}
+          <CardContent>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={trainingMetrics}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" />
+                <YAxis />
+                <Tooltip />
+                <Line type="monotone" dataKey="camps" stroke="#F97316" strokeWidth={3} name="Training Camps" />
+                <Line type="monotone" dataKey="citizens" stroke="#10B981" strokeWidth={3} name="Citizens Trained" />
+                <Line type="monotone" dataKey="meCompleted" stroke="#8B5CF6" strokeWidth={3} name="M&E Completed" />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
@@ -232,10 +262,10 @@ const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
         </Card>
       </div>
 
-      {/* Agent Efficiency Rankings */}
+      {/* Agent Efficiency Rankings with Training Metrics */}
       <Card>
         <CardHeader>
-          <CardTitle>Agent Efficiency Rankings</CardTitle>
+          <CardTitle>Agent Performance Rankings (Overall)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -249,18 +279,53 @@ const AgentAnalytics = ({ agents }: AgentAnalyticsProps) => {
                     </div>
                     <div>
                       <p className="font-medium">{agent.name}</p>
-                      <p className="text-sm text-gray-600">{agent.routes} routes assigned</p>
+                      <p className="text-sm text-gray-600">{agent.routes} routes • {agent.trainingCamps} camps</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold">${agent.collections.toLocaleString()}</p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex gap-4">
+                      <div className="text-center">
+                        <p className="font-semibold">${agent.collections.toLocaleString()}</p>
+                        <p className="text-xs text-gray-500">Collections</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="font-semibold text-orange-600">{agent.citizensTrained}</p>
+                        <p className="text-xs text-gray-500">Citizens Trained</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
                       <Progress value={agent.efficiency} className="w-20 h-2" />
                       <span className="text-sm font-medium">{agent.efficiency}%</span>
                     </div>
                   </div>
                 </div>
               ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Training Camp M&E Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5" />
+            Training Camp M&E Completion Status
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+            {trainingMetrics.map((month) => {
+              const completionRate = (month.meCompleted / month.camps) * 100;
+              return (
+                <div key={month.month} className="text-center p-4 border rounded-lg">
+                  <p className="font-semibold text-lg">{month.month}</p>
+                  <p className="text-2xl font-bold text-orange-600">{month.camps}</p>
+                  <p className="text-xs text-gray-500">Camps</p>
+                  <Progress value={completionRate} className="mt-2 h-2" />
+                  <p className="text-xs mt-1">{month.meCompleted}/{month.camps} M&E Complete</p>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>

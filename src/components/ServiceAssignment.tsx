@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, Target, Plus, AlertTriangle, CheckCircle, TrendingUp, BarChart3 } from 'lucide-react';
+import { Users, Target, Plus, AlertTriangle, CheckCircle, TrendingUp, BarChart3, GraduationCap } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
 import NewServiceAssignmentForm from './NewServiceAssignmentForm';
@@ -26,10 +26,10 @@ interface ServiceAssignment {
   agentName: string;
   projectId: string;
   serviceName: string;
-  serviceType: 'fee_collection' | 'document_verification' | 'client_onboarding' | 'compliance_check' | 'field_survey';
+  serviceType: 'fee_collection' | 'document_verification' | 'client_onboarding' | 'compliance_check' | 'field_survey' | 'training_camps' | 'training_citizens';
   monthlyTarget: number;
   currentProgress: number;
-  targetUnit: 'clients' | 'amount' | 'documents' | 'visits';
+  targetUnit: 'clients' | 'amount' | 'documents' | 'visits' | 'camps' | 'citizens';
   startDate: Date;
   endDate?: Date;
   status: 'active' | 'paused' | 'completed';
@@ -86,6 +86,34 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
       startDate: new Date('2024-02-01'),
       status: 'active',
       priority: 'high'
+    },
+    {
+      id: '4',
+      agentId: 1,
+      agentName: 'Rajesh Kumar',
+      projectId: 'mumbai-fin',
+      serviceName: 'Monthly Training Camps',
+      serviceType: 'training_camps',
+      monthlyTarget: 3,
+      currentProgress: 2,
+      targetUnit: 'camps',
+      startDate: new Date('2024-06-01'),
+      status: 'active',
+      priority: 'high'
+    },
+    {
+      id: '5',
+      agentId: 2,
+      agentName: 'Priya Sharma',
+      projectId: 'mumbai-fin',
+      serviceName: 'Citizens Training Target',
+      serviceType: 'training_citizens',
+      monthlyTarget: 150,
+      currentProgress: 110,
+      targetUnit: 'citizens',
+      startDate: new Date('2024-06-01'),
+      status: 'active',
+      priority: 'medium'
     }
   ]);
 
@@ -121,6 +149,18 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
       name: 'Field Survey', 
       unit: 'visits',
       description: 'Conduct field surveys'
+    },
+    { 
+      type: 'training_camps', 
+      name: 'Training Camps', 
+      unit: 'camps',
+      description: 'Organize and conduct training camps'
+    },
+    { 
+      type: 'training_citizens', 
+      name: 'Citizens Training', 
+      unit: 'citizens',
+      description: 'Train citizens in various programs'
     }
   ];
 
@@ -157,8 +197,9 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
     const totalAssignments = assignments.length;
     const onTrackCount = assignments.filter(a => getProgressPercentage(a.currentProgress, a.monthlyTarget) >= 90).length;
     const criticalCount = assignments.filter(a => getProgressPercentage(a.currentProgress, a.monthlyTarget) < 70).length;
+    const trainingAssignments = assignments.filter(a => a.serviceType === 'training_camps' || a.serviceType === 'training_citizens').length;
     
-    return { totalAssignments, onTrackCount, criticalCount };
+    return { totalAssignments, onTrackCount, criticalCount, trainingAssignments };
   };
 
   const getServiceTypeStats = () => {
@@ -203,7 +244,7 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-semibold">Service Assignment & Targets</h3>
-          <p className="text-sm text-muted-foreground">Assign specific services to agents with performance targets</p>
+          <p className="text-sm text-muted-foreground">Assign specific services to agents with performance targets, including training camps</p>
         </div>
         <Button 
           className="bg-blue-600 hover:bg-blue-700"
@@ -215,7 +256,7 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
       </div>
 
       {/* Performance Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -256,6 +297,18 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm font-medium text-gray-600">Training Services</p>
+                <p className="text-2xl font-bold text-orange-600">{stats.trainingAssignments}</p>
+              </div>
+              <GraduationCap className="h-8 w-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Active Agents</p>
                 <p className="text-2xl font-bold text-purple-600">{filteredAgents.length}</p>
               </div>
@@ -278,11 +331,16 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
             {serviceTypeStats.map((serviceStat) => (
               <div key={serviceStat.serviceType} className="space-y-4 p-4 border rounded-lg">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-semibold text-lg">{serviceStat.serviceName}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {serviceStat.assignmentCount} assignments • {serviceStat.activeAgents} agents
-                    </p>
+                  <div className="flex items-center gap-2">
+                    {(serviceStat.serviceType === 'training_camps' || serviceStat.serviceType === 'training_citizens') && (
+                      <GraduationCap className="h-5 w-5 text-orange-600" />
+                    )}
+                    <div>
+                      <h4 className="font-semibold text-lg">{serviceStat.serviceName}</h4>
+                      <p className="text-sm text-muted-foreground">
+                        {serviceStat.assignmentCount} assignments • {serviceStat.activeAgents} agents
+                      </p>
+                    </div>
                   </div>
                   <Badge variant={serviceStat.progressPercentage >= 90 ? 'default' : 
                                 serviceStat.progressPercentage >= 70 ? 'secondary' : 'destructive'}>
@@ -356,6 +414,7 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
             <TableBody>
               {assignments.map((assignment) => {
                 const progressPercentage = getProgressPercentage(assignment.currentProgress, assignment.monthlyTarget);
+                const isTrainingService = assignment.serviceType === 'training_camps' || assignment.serviceType === 'training_citizens';
                 
                 return (
                   <TableRow key={assignment.id}>
@@ -371,7 +430,10 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <span className="font-medium">{assignment.serviceName}</span>
+                        <div className="flex items-center gap-2">
+                          {isTrainingService && <GraduationCap className="h-4 w-4 text-orange-600" />}
+                          <span className="font-medium">{assignment.serviceName}</span>
+                        </div>
                         <Badge variant="outline" className="text-xs">
                           {assignment.priority.toUpperCase()}
                         </Badge>
@@ -416,6 +478,9 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
                           <SelectItem value="edit">Edit Target</SelectItem>
                           <SelectItem value="pause">Pause</SelectItem>
                           <SelectItem value="reassign">Reassign</SelectItem>
+                          {isTrainingService && (
+                            <SelectItem value="view-camps">View Camps</SelectItem>
+                          )}
                         </SelectContent>
                       </Select>
                     </TableCell>
