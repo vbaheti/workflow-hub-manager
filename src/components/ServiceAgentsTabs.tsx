@@ -43,7 +43,7 @@ const ServiceAgentsTabs: React.FC<ServiceAgentsTabsProps> = ({
         {hasPermission('assign_routes') && (
           <TabsTrigger value="assignment" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
-            Assignment & Scheduling
+            Assignment & Training
           </TabsTrigger>
         )}
         {hasPermission('track_services') && (
