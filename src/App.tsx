@@ -1,3 +1,4 @@
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
@@ -19,6 +20,7 @@ import ServicePricingManagement from './components/ServicePricingManagement';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { StateProvider } from './contexts/StateContext';
 import { RBACProvider } from './contexts/RBACContext';
+import { ApprovalProvider } from './contexts/ApprovalContext';
 
 const queryClient = new QueryClient();
 
@@ -28,25 +30,27 @@ function App() {
       <RBACProvider>
         <ProjectProvider>
           <StateProvider>
-            <Router>
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/agents" element={<ServiceAgents />} />
-                  <Route path="/fees" element={<FeeCollection />} />
-                  <Route path="/transactions" element={<FinancialTransactions />} />
-                  <Route path="/reimbursements" element={<Reimbursements />} />
-                  <Route path="/hrms" element={<HRMS />} />
-                  <Route path="/commissions" element={<CommissionApproval />} />
-                  <Route path="/pricing" element={<ServicePricingManagement />} />
-                  <Route path="/bank-details" element={<BankDetails />} />
-                  <Route path="/approvals" element={<ApprovalWorkflow />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Layout>
-            </Router>
+            <ApprovalProvider>
+              <Router>
+                <Layout>
+                  <Routes>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/dashboard" element={<Dashboard />} />
+                    <Route path="/agents" element={<ServiceAgents />} />
+                    <Route path="/fees" element={<FeeCollection />} />
+                    <Route path="/transactions" element={<FinancialTransactions />} />
+                    <Route path="/reimbursements" element={<Reimbursements />} />
+                    <Route path="/hrms" element={<HRMS />} />
+                    <Route path="/commissions" element={<CommissionApproval />} />
+                    <Route path="/pricing" element={<ServicePricingManagement />} />
+                    <Route path="/bank-details" element={<BankDetails />} />
+                    <Route path="/approvals" element={<ApprovalWorkflow />} />
+                    <Route path="/settings" element={<Settings />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Layout>
+              </Router>
+            </ApprovalProvider>
           </StateProvider>
         </ProjectProvider>
       </RBACProvider>

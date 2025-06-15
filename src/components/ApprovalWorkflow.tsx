@@ -5,96 +5,49 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle, XCircle, Clock, DollarSign, FileText, Search, Filter } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, DollarSign, FileText, Search, Filter, Users, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface PendingTransaction {
-  id: string;
-  type: 'fee' | 'commission' | 'reimbursement';
-  agentName: string;
-  amount: number;
-  description: string;
-  submittedDate: string;
-  status: 'pending' | 'approved' | 'rejected';
-  priority: 'high' | 'medium' | 'low';
-}
-
-const mockTransactions: PendingTransaction[] = [
-  {
-    id: '1',
-    type: 'commission',
-    agentName: 'John Smith',
-    amount: 2500,
-    description: 'Q4 Sales Commission',
-    submittedDate: '2024-01-15',
-    status: 'pending',
-    priority: 'high'
-  },
-  {
-    id: '2',
-    type: 'reimbursement',
-    agentName: 'Sarah Johnson',
-    amount: 450,
-    description: 'Travel Expenses - Client Meeting',
-    submittedDate: '2024-01-14',
-    status: 'pending',
-    priority: 'medium'
-  },
-  {
-    id: '3',
-    type: 'fee',
-    agentName: 'Mike Davis',
-    amount: 800,
-    description: 'Processing Fee Collection',
-    submittedDate: '2024-01-13',
-    status: 'pending',
-    priority: 'low'
-  }
-];
+import { useApproval } from '../contexts/ApprovalContext';
+import { ApprovalType } from '../types/approvals';
 
 export default function ApprovalWorkflow() {
-  const [transactions, setTransactions] = useState<PendingTransaction[]>(mockTransactions);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
-  const [filterPriority, setFilterPriority] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
   const { toast } = useToast();
+  const { approvalRequests, approveRequest, rejectRequest, getPendingApprovals } = useApproval();
 
-  const handleApprove = (id: string) => {
-    setTransactions(prev => 
-      prev.map(t => t.id === id ? { ...t, status: 'approved' as const } : t)
-    );
-    toast({
-      title: "Transaction Approved",
-      description: "The transaction has been successfully approved.",
-    });
-  };
-
-  const handleReject = (id: string) => {
-    setTransactions(prev => 
-      prev.map(t => t.id === id ? { ...t, status: 'rejected' as const } : t)
-    );
-    toast({
-      title: "Transaction Rejected",
-      description: "The transaction has been rejected.",
-      variant: "destructive",
-    });
-  };
-
-  const filteredTransactions = transactions.filter(transaction => {
-    const matchesSearch = transaction.agentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || transaction.type === filterType;
-    const matchesPriority = filterPriority === 'all' || transaction.priority === filterPriority;
+  const filteredRequests = approvalRequests.filter(request => {
+    const matchesSearch = request.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         request.requestedByName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'all' || request.type === filterType;
+    const matchesStatus = filterStatus === 'all' || request.status === filterStatus;
     
-    return matchesSearch && matchesType && matchesPriority;
+    return matchesSearch && matchesType && matchesStatus;
   });
 
-  const getTypeIcon = (type: string) => {
+  const getTypeIcon = (type: ApprovalType) => {
     switch (type) {
-      case 'commission': return <DollarSign className="h-4 w-4" />;
-      case 'reimbursement': return <FileText className="h-4 w-4" />;
-      case 'fee': return <Clock className="h-4 w-4" />;
+      case 'agent_onboarding': return <Users className="h-4 w-4" />;
+      case 'pricing_change': return <DollarSign className="h-4 w-4" />;
+      case 'commission_request': return <FileText className="h-4 w-4" />;
+      case 'bank_details_update': return <Clock className="h-4 w-4" />;
+      case 'route_assignment': return <MapPin className="h-4 w-4" />;
+      case 'reimbursement_request': return <FileText className="h-4 w-4" />;
       default: return <FileText className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeLabel = (type: ApprovalType) => {
+    switch (type) {
+      case 'agent_onboarding': return 'Agent Onboarding';
+      case 'pricing_change': return 'Pricing Change';
+      case 'commission_request': return 'Commission Request';
+      case 'bank_details_update': return 'Bank Details Update';
+      case 'route_assignment': return 'Route Assignment';
+      case 'reimbursement_request': return 'Reimbursement Request';
+      default: return type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
     }
   };
 
@@ -112,19 +65,30 @@ export default function ApprovalWorkflow() {
       case 'approved': return 'bg-green-100 text-green-800';
       case 'rejected': return 'bg-red-100 text-red-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'cancelled': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const pendingCount = transactions.filter(t => t.status === 'pending').length;
-  const approvedCount = transactions.filter(t => t.status === 'approved').length;
-  const rejectedCount = transactions.filter(t => t.status === 'rejected').length;
+  const pendingCount = approvalRequests.filter(r => r.status === 'pending').length;
+  const approvedCount = approvalRequests.filter(r => r.status === 'approved').length;
+  const rejectedCount = approvalRequests.filter(r => r.status === 'rejected').length;
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Approval Workflow</h1>
-        <p className="text-gray-600 mt-2">Review and approve pending transactions</p>
+        <h1 className="text-3xl font-bold text-gray-900">Unified Approval Workflow</h1>
+        <p className="text-gray-600 mt-2">Review and approve all sensitive actions across the system</p>
       </div>
 
       {/* Summary Cards */}
@@ -176,7 +140,7 @@ export default function ApprovalWorkflow() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <Input
-                placeholder="Search by agent name or description..."
+                placeholder="Search by title, description, or requester..."
                 className="pl-10"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -189,64 +153,77 @@ export default function ApprovalWorkflow() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="commission">Commission</SelectItem>
-                <SelectItem value="reimbursement">Reimbursement</SelectItem>
-                <SelectItem value="fee">Fee</SelectItem>
+                <SelectItem value="agent_onboarding">Agent Onboarding</SelectItem>
+                <SelectItem value="pricing_change">Pricing Change</SelectItem>
+                <SelectItem value="commission_request">Commission Request</SelectItem>
+                <SelectItem value="bank_details_update">Bank Details Update</SelectItem>
+                <SelectItem value="route_assignment">Route Assignment</SelectItem>
+                <SelectItem value="reimbursement_request">Reimbursement Request</SelectItem>
               </SelectContent>
             </Select>
             
-            <Select value={filterPriority} onValueChange={setFilterPriority}>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger>
-                <SelectValue placeholder="Filter by priority" />
+                <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Priorities</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
+                <SelectItem value="approved">Approved</SelectItem>
+                <SelectItem value="rejected">Rejected</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Transactions List */}
+      {/* Approval Requests List */}
       <div className="space-y-4">
-        {filteredTransactions.map((transaction) => (
-          <Card key={transaction.id} className="hover:shadow-lg transition-shadow">
+        {filteredRequests.map((request) => (
+          <Card key={request.id} className="hover:shadow-lg transition-shadow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="flex items-center space-x-2">
-                    {getTypeIcon(transaction.type)}
+                    {getTypeIcon(request.type)}
                     <div>
-                      <h3 className="font-semibold text-lg">{transaction.agentName}</h3>
-                      <p className="text-gray-600">{transaction.description}</p>
-                      <p className="text-sm text-gray-500">Submitted: {transaction.submittedDate}</p>
+                      <h3 className="font-semibold text-lg">{request.title}</h3>
+                      <p className="text-gray-600">{request.description}</p>
+                      <p className="text-sm text-gray-500">
+                        Requested by {request.requestedByName} • {formatDate(request.requestedAt)}
+                      </p>
+                      {request.approverName && (
+                        <p className="text-sm text-gray-500">
+                          {request.status === 'approved' ? 'Approved' : 'Rejected'} by {request.approverName} • {request.approvedAt && formatDate(request.approvedAt)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-4">
                   <div className="text-right">
-                    <p className="text-xl font-bold">${transaction.amount.toLocaleString()}</p>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge variant={getPriorityColor(transaction.priority)}>
-                        {transaction.priority.toUpperCase()}
+                    <div className="flex items-center space-x-2 mb-2">
+                      <Badge variant="outline">
+                        {getTypeLabel(request.type)}
                       </Badge>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(transaction.status)}`}>
-                        {transaction.status.toUpperCase()}
+                      <Badge variant={getPriorityColor(request.priority)}>
+                        {request.priority.toUpperCase()}
+                      </Badge>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(request.status)}`}>
+                        {request.status.toUpperCase()}
                       </span>
                     </div>
                   </div>
                   
-                  {transaction.status === 'pending' && (
+                  {request.status === 'pending' && (
                     <div className="flex space-x-2">
                       <Button
                         size="sm"
                         variant="outline"
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        onClick={() => handleReject(transaction.id)}
+                        onClick={() => rejectRequest(request.id, 'Rejected by reviewer')}
                       >
                         <XCircle className="h-4 w-4 mr-1" />
                         Reject
@@ -254,7 +231,7 @@ export default function ApprovalWorkflow() {
                       <Button
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
-                        onClick={() => handleApprove(transaction.id)}
+                        onClick={() => approveRequest(request.id)}
                       >
                         <CheckCircle className="h-4 w-4 mr-1" />
                         Approve
@@ -268,11 +245,11 @@ export default function ApprovalWorkflow() {
         ))}
       </div>
 
-      {filteredTransactions.length === 0 && (
+      {filteredRequests.length === 0 && (
         <Card>
           <CardContent className="p-12 text-center">
             <Filter className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No transactions found</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No approval requests found</h3>
             <p className="text-gray-600">Try adjusting your search criteria or filters.</p>
           </CardContent>
         </Card>
