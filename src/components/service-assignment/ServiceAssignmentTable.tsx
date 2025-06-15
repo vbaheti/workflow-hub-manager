@@ -26,14 +26,14 @@ interface ServiceAssignment {
 interface ServiceAssignmentTableProps {
   assignments: ServiceAssignment[];
   getProgressPercentage: (current: number, target: number) => number;
-  getProgressBadge: (current: number, target: number) => React.ReactNode;
+  getProgressBadgeConfig: (current: number, target: number) => { variant: 'default' | 'secondary' | 'destructive'; className: string; text: string };
   formatValue: (value: number, unit: string) => string;
 }
 
 const ServiceAssignmentTable = ({ 
   assignments, 
   getProgressPercentage, 
-  getProgressBadge, 
+  getProgressBadgeConfig, 
   formatValue 
 }: ServiceAssignmentTableProps) => {
   return (
@@ -57,6 +57,7 @@ const ServiceAssignmentTable = ({
           <TableBody>
             {assignments.map((assignment) => {
               const progressPercentage = getProgressPercentage(assignment.currentProgress, assignment.monthlyTarget);
+              const badgeConfig = getProgressBadgeConfig(assignment.currentProgress, assignment.monthlyTarget);
               const isTrainingService = assignment.serviceType === 'training_camps' || assignment.serviceType === 'training_citizens';
               
               return (
@@ -110,7 +111,9 @@ const ServiceAssignmentTable = ({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {getProgressBadge(assignment.currentProgress, assignment.monthlyTarget)}
+                    <Badge variant={badgeConfig.variant} className={badgeConfig.className}>
+                      {badgeConfig.text}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     <Select>

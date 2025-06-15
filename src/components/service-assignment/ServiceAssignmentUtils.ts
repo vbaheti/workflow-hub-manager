@@ -1,6 +1,4 @@
 
-import { Badge } from '@/components/ui/badge';
-
 export interface ServiceAssignment {
   id: string;
   agentId: number;
@@ -24,15 +22,21 @@ export interface AvailableService {
   description: string;
 }
 
+export interface BadgeConfig {
+  variant: 'default' | 'secondary' | 'destructive';
+  className: string;
+  text: string;
+}
+
 export const getProgressPercentage = (current: number, target: number): number => {
   return Math.min((current / target) * 100, 100);
 };
 
-export const getProgressBadge = (current: number, target: number) => {
+export const getProgressBadgeConfig = (current: number, target: number): BadgeConfig => {
   const percentage = getProgressPercentage(current, target);
-  if (percentage >= 90) return <Badge className="bg-green-100 text-green-800">On Track</Badge>;
-  if (percentage >= 70) return <Badge className="bg-yellow-100 text-yellow-800">Behind</Badge>;
-  return <Badge className="bg-red-100 text-red-800">Critical</Badge>;
+  if (percentage >= 90) return { variant: 'default', className: 'bg-green-100 text-green-800', text: 'On Track' };
+  if (percentage >= 70) return { variant: 'secondary', className: 'bg-yellow-100 text-yellow-800', text: 'Behind' };
+  return { variant: 'destructive', className: 'bg-red-100 text-red-800', text: 'Critical' };
 };
 
 export const formatValue = (value: number, unit: string): string => {

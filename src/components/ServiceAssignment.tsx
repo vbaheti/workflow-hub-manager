@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -13,7 +12,7 @@ import {
   ServiceAssignment as ServiceAssignmentType,
   AvailableService,
   getProgressPercentage,
-  getProgressBadge,
+  getProgressBadgeConfig,
   formatValue,
   getServiceStats,
   getServiceTypeStats
@@ -205,7 +204,7 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
       <ServiceAssignmentTable
         assignments={assignments}
         getProgressPercentage={getProgressPercentage}
-        getProgressBadge={getProgressBadge}
+        getProgressBadgeConfig={getProgressBadgeConfig}
         formatValue={formatValue}
       />
 
