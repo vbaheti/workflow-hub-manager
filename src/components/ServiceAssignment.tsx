@@ -1,13 +1,13 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, Target, Plus, AlertTriangle, CheckCircle, TrendingUp } from 'lucide-react';
+import { Users, Target, Plus, AlertTriangle, CheckCircle, TrendingUp, BarChart3 } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
 import { useToast } from '@/hooks/use-toast';
 import NewServiceAssignmentForm from './NewServiceAssignmentForm';
@@ -161,7 +161,30 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
     return { totalAssignments, onTrackCount, criticalCount };
   };
 
+  const getServiceTypeStats = () => {
+    const serviceTypeStats = availableServices.map(service => {
+      const serviceAssignments = assignments.filter(a => a.serviceType === service.type);
+      const totalTarget = serviceAssignments.reduce((sum, a) => sum + a.monthlyTarget, 0);
+      const totalProgress = serviceAssignments.reduce((sum, a) => sum + a.currentProgress, 0);
+      const progressPercentage = totalTarget > 0 ? (totalProgress / totalTarget) * 100 : 0;
+      
+      return {
+        serviceType: service.type,
+        serviceName: service.name,
+        unit: service.unit,
+        assignmentCount: serviceAssignments.length,
+        totalTarget,
+        totalProgress,
+        progressPercentage,
+        activeAgents: new Set(serviceAssignments.map(a => a.agentId)).size
+      };
+    }).filter(stat => stat.assignmentCount > 0);
+    
+    return serviceTypeStats;
+  };
+
   const stats = getServiceStats();
+  const serviceTypeStats = getServiceTypeStats();
 
   if (showNewAssignmentForm) {
     return (
@@ -241,6 +264,76 @@ const ServiceAssignment = ({ agents }: ServiceAssignmentProps) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Service Type Progress Overview */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Service Type Progress Overview
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {serviceTypeStats.map((serviceStat) => (
+              <div key={serviceStat.serviceType} className="space-y-4 p-4 border rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-semibold text-lg">{serviceStat.serviceName}</h4>
+                    <p className="text-sm text-muted-foreground">
+                      {serviceStat.assignmentCount} assignments • {serviceStat.activeAgents} agents
+                    </p>
+                  </div>
+                  <Badge variant={serviceStat.progressPercentage >= 90 ? 'default' : 
+                                serviceStat.progressPercentage >= 70 ? 'secondary' : 'destructive'}>
+                    {serviceStat.progressPercentage.toFixed(0)}%
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Progress</span>
+                    <span>{serviceStat.progressPercentage.toFixed(1)}%</span>
+                  </div>
+                  <Progress value={serviceStat.progressPercentage} className="h-3" />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>
+                      {formatValue(serviceStat.totalProgress, serviceStat.unit)} achieved
+                    </span>
+                    <span>
+                      Target: {formatValue(serviceStat.totalTarget, serviceStat.unit)}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4 pt-2 border-t">
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-blue-600">{serviceStat.assignmentCount}</p>
+                    <p className="text-xs text-muted-foreground">Assignments</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-green-600">{serviceStat.activeAgents}</p>
+                    <p className="text-xs text-muted-foreground">Active Agents</p>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-purple-600">
+                      {serviceStat.totalTarget > 0 ? Math.round(serviceStat.totalTarget / serviceStat.assignmentCount) : 0}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Avg Target</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {serviceTypeStats.length === 0 && (
+            <div className="text-center py-8 text-muted-foreground">
+              <Target className="h-12 w-12 mx-auto mb-3 opacity-50" />
+              <p>No service assignments yet. Create your first assignment to see progress tracking.</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Service Assignment Table */}
       <Card>
