@@ -47,7 +47,9 @@ export default function ApprovalTrigger({
       },
       priority,
       requiredPermissions,
-      projectId
+      projectId,
+      requestedBy: 'current-user-id', // This should come from auth context
+      requestedByName: 'Current User' // This should come from auth context
     });
     
     setOpen(false);
@@ -60,40 +62,41 @@ export default function ApprovalTrigger({
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] mx-4">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <AlertTriangle className="h-5 w-5 text-orange-500" />
+          <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+            <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-500" />
             Approval Required
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-sm">
             This action requires approval. Please provide justification for your request.
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <h4 className="font-medium">{title}</h4>
-            <p className="text-sm text-muted-foreground">{description}</p>
+            <h4 className="font-medium text-sm sm:text-base">{title}</h4>
+            <p className="text-xs sm:text-sm text-muted-foreground">{description}</p>
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="justification">Justification</Label>
+            <Label htmlFor="justification" className="text-sm">Justification</Label>
             <Textarea
               id="justification"
               placeholder="Please explain why this action is necessary..."
               value={justification}
               onChange={(e) => setJustification(e.target.value)}
               rows={3}
+              className="text-sm resize-none"
             />
           </div>
         </div>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2">
+          <Button variant="outline" onClick={() => setOpen(false)} className="w-full sm:w-auto">
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={!justification.trim()}>
+          <Button onClick={handleSubmit} disabled={!justification.trim()} className="w-full sm:w-auto">
             Submit for Approval
           </Button>
         </DialogFooter>
