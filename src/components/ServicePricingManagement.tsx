@@ -129,7 +129,7 @@ export default function ServicePricingManagement() {
   const [newRuleSet, setNewRuleSet] = useState({
     serviceName: '',
     category: '',
-    pricingType: 'fixed' as const,
+    pricingType: 'fixed' as 'fixed' | 'percentage',
     baseAmount: '',
     stages: {
       initial: { stage: 'initial' as const, amount: '', baseAmount: '' },
@@ -169,15 +169,10 @@ export default function ServicePricingManagement() {
   }, {} as Record<string, any>);
 
   const calculateTotal = () => {
-    if (newRuleSet.pricingType === 'fixed') {
-      return Object.values(newRuleSet.stages).reduce((sum, stage) => {
-        return sum + (parseFloat(stage.amount) || 0);
-      }, 0);
-    } else {
-      return Object.values(newRuleSet.stages).reduce((sum, stage) => {
-        return sum + (parseFloat(stage.amount) || 0);
-      }, 0);
-    }
+    const stageAmounts = Object.values(newRuleSet.stages);
+    return stageAmounts.reduce((sum, stage) => {
+      return sum + (parseFloat(stage.amount) || 0);
+    }, 0);
   };
 
   const validateRuleSet = () => {
@@ -193,7 +188,8 @@ export default function ServicePricingManagement() {
     }
 
     // For percentage type, check if total equals 100%
-    if (newRuleSet.pricingType === 'percentage') {
+    const currentPricingType = newRuleSet.pricingType;
+    if (currentPricingType === 'percentage') {
       if (!newRuleSet.baseAmount) {
         return "Base amount is required for percentage pricing";
       }
@@ -303,7 +299,8 @@ export default function ServicePricingManagement() {
   const activeRuleSets = Object.values(groupedRules).filter(rs => rs.isActive).length;
   const totalValue = Object.values(groupedRules).reduce((sum, rs) => {
     const stageValues = Object.values(rs.stages).reduce((stageSum: number, rule: any) => {
-      return stageSum + (rule.pricingType === 'fixed' ? rule.amount : rule.baseAmount || 0);
+      const ruleType = rule.pricingType;
+      return stageSum + (ruleType === 'fixed' ? rule.amount : rule.baseAmount || 0);
     }, 0);
     return sum + stageValues;
   }, 0);
@@ -421,7 +418,7 @@ export default function ServicePricingManagement() {
                       <Label htmlFor="pricingType">Pricing Type</Label>
                       <Select 
                         value={newRuleSet.pricingType}
-                        onValueChange={(value: any) => setNewRuleSet({...newRuleSet, pricingType: value})}
+                        onValueChange={(value: 'fixed' | 'percentage') => setNewRuleSet({...newRuleSet, pricingType: value})}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select type" />
@@ -526,7 +523,8 @@ export default function ServicePricingManagement() {
                 <TableBody>
                   {Object.values(groupedRules).map((ruleSet: any) => {
                     const total = Object.values(ruleSet.stages).reduce((sum: number, rule: any) => {
-                      return sum + (rule.pricingType === 'fixed' ? rule.amount : rule.amount);
+                      const rulePricingType = rule.pricingType;
+                      return sum + (rulePricingType === 'fixed' ? rule.amount : rule.amount);
                     }, 0);
                     
                     return (
