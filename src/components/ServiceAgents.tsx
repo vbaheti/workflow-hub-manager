@@ -1,19 +1,11 @@
+
 import React, { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Route, BarChart3, Truck } from 'lucide-react';
 import { useProject } from '../contexts/ProjectContext';
-import { useRBAC } from '../contexts/RBACContext';
-import AddNewAgentForm from './AddNewAgentForm';
-import ViewAgentModal from './ViewAgentModal';
-import EditAgentModal from "./EditAgentModal";
-import AssignRoutesModal from "./AssignRoutesModal";
-import ViewPerformanceModal from "./ViewPerformanceModal";
-import ServiceAgentsManagement from './ServiceAgentsManagement';
-import ServiceAgentsAssignment from './ServiceAgentsAssignment';
-import ServiceAgentsTracking from './ServiceAgentsTracking';
-import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
 import PermissionGate from './PermissionGate';
-import { useStateContext } from "../contexts/StateContext";
+import useAgentData from '../hooks/useAgentData';
+import ServiceAgentsHeader from './ServiceAgentsHeader';
+import ServiceAgentsTabs from './ServiceAgentsTabs';
+import ServiceAgentsModals from './ServiceAgentsModals';
 
 const ServiceAgents = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -22,265 +14,60 @@ const ServiceAgents = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [assignRoutesModalOpen, setAssignRoutesModalOpen] = useState(false);
   const [performanceModalOpen, setPerformanceModalOpen] = useState(false);
+  
   const { selectedProject, currentProject } = useProject();
-  const { selectedStates } = useStateContext();
-  const { hasPermission } = useRBAC();
-
-  const allAgents = [
-    {
-      id: 1,
-      name: "Rajesh Kumar",
-      email: "rajesh.kumar@company.com",
-      phone: "+91 98765 43210",
-      location: "Delhi, India",
-      status: "active",
-      performance: "excellent",
-      joinDate: "2023-01-15",
-      totalCollections: "₹4,52,000",
-      assignedRoutes: ["Central Delhi", "Connaught Place"],
-      projects: ["Mumbai Financial Hub", "Delhi Service Network"],
-      avatar: ""
-    },
-    {
-      id: 2,
-      name: "Priya Sharma",
-      email: "priya.sharma@company.com",
-      phone: "+91 87654 32109",
-      location: "Mumbai, India",
-      status: "active",
-      performance: "good",
-      joinDate: "2023-03-20",
-      totalCollections: "₹3,89,000",
-      assignedRoutes: ["Bandra West", "Andheri East"],
-      projects: ["Mumbai Financial Hub", "Bangalore Tech Corridor"],
-      avatar: ""
-    },
-    {
-      id: 3,
-      name: "Ahmed Hassan",
-      email: "ahmed.hassan@company.com",
-      phone: "+880 1712 345678",
-      location: "Dhaka, Bangladesh",
-      status: "inactive",
-      performance: "average",
-      joinDate: "2022-11-10",
-      totalCollections: "৳2,95,000",
-      assignedRoutes: ["Gulshan District"],
-      projects: ["Dhaka Urban Services"],
-      avatar: ""
-    },
-    {
-      id: 4,
-      name: "Fatima Al-Zahra",
-      email: "fatima.alzahra@company.com",
-      phone: "+971 50 123 4567",
-      location: "Dubai, UAE",
-      status: "active",
-      performance: "excellent",
-      joinDate: "2023-05-08",
-      totalCollections: "AED 521,000",
-      assignedRoutes: ["Business Bay", "DIFC"],
-      projects: ["UAE Business Services", "Dubai Financial District"],
-      avatar: ""
-    },
-    {
-      id: 5,
-      name: "Chen Wei Ming",
-      email: "chen.weiming@company.com",
-      phone: "+65 8765 4321",
-      location: "Singapore",
-      status: "active",
-      performance: "good",
-      joinDate: "2023-02-14",
-      totalCollections: "S$418,000",
-      assignedRoutes: ["Marina Bay", "Raffles Place"],
-      projects: ["Singapore Financial Hub", "Southeast Asia Expansion"],
-      avatar: ""
-    },
-    {
-      id: 6,
-      name: "Amara Okafor",
-      email: "amara.okafor@company.com",
-      phone: "+234 803 123 4567",
-      location: "Lagos, Nigeria",
-      status: "active",
-      performance: "excellent",
-      joinDate: "2023-04-12",
-      totalCollections: "₦12,500,000",
-      assignedRoutes: ["Victoria Island", "Ikoyi"],
-      projects: ["Lagos Commercial Hub", "West Africa Network"],
-      avatar: ""
-    }
-  ];
-
-  function getProjectStates(projectName: string): string[] {
-    if (projectName.toLowerCase().includes("delhi")) return ["Delhi"];
-    if (projectName.toLowerCase().includes("mumbai")) return ["Maharashtra"];
-    if (projectName.toLowerCase().includes("bangalore") || projectName.toLowerCase().includes("karnataka")) return ["Karnataka"];
-    if (projectName.toLowerCase().includes("dhaka")) return ["West Bengal"];
-    if (projectName.toLowerCase().includes("dubai") || projectName.toLowerCase().includes("uae")) return ["Rajasthan"];
-    return ["Delhi", "Maharashtra", "West Bengal"];
-  }
-
-  const projectAgents = allAgents.filter(agent => {
-    if (!currentProject) return false;
-    const agentInProject = agent.projects.includes(currentProject.name);
-    const routeMatch =
-      selectedStates.length === 0
-        ? true
-        : agent.assignedRoutes.some(
-            (r: string) =>
-              selectedStates.some((state) => r.toLowerCase().includes(state.toLowerCase()))
-          );
-    const projectStates = getProjectStates(currentProject.name);
-    const mappedState =
-      selectedStates.length === 0
-        ? true
-        : selectedStates.some((s) => projectStates.includes(s));
-    return agentInProject && (routeMatch || mappedState);
-  });
-
-  const filteredAgents = projectAgents.filter(agent =>
-    agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    agent.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const { projectAgents, getFilteredAgents } = useAgentData();
+  
+  const filteredAgents = getFilteredAgents(searchTerm);
 
   const handleAgentAdded = (agent: any) => {
     console.log('Agent added:', agent);
   };
 
   if (!currentProject) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Project Selected</h3>
-          <p className="text-gray-600">Please select a project from the sidebar to view agents.</p>
-        </div>
-      </div>
-    );
+    return <ServiceAgentsHeader onAgentAdded={handleAgentAdded} />;
   }
 
   return (
     <PermissionGate permissions={['view_agents']}>
       <div className="space-y-6">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-5">
-          <div>
-            <h2 className="text-2xl font-bold">Service Agents - {currentProject.name}</h2>
-            <p className="text-muted-foreground">{currentProject.description}</p>
-          </div>
-          <div className="flex flex-col md:flex-row gap-4 md:items-end">
-            <PermissionGate permissions={['onboard_agents']}>
-              <AddNewAgentForm onAgentAdded={handleAgentAdded} />
-            </PermissionGate>
-          </div>
-        </div>
+        <ServiceAgentsHeader onAgentAdded={handleAgentAdded} />
 
-        <Tabs defaultValue="agents" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="agents" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              Agents
-            </TabsTrigger>
-            {hasPermission('assign_routes') && (
-              <TabsTrigger value="assignment" className="flex items-center gap-2">
-                <Route className="h-4 w-4" />
-                Assignment & Scheduling
-              </TabsTrigger>
-            )}
-            {hasPermission('track_services') && (
-              <TabsTrigger value="delivery" className="flex items-center gap-2">
-                <Truck className="h-4 w-4" />
-                Service Tracking
-              </TabsTrigger>
-            )}
-            {hasPermission('view_analytics') && (
-              <TabsTrigger value="analytics" className="flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" />
-                Analytics
-              </TabsTrigger>
-            )}
-          </TabsList>
+        <ServiceAgentsTabs
+          filteredAgents={filteredAgents}
+          projectAgents={projectAgents}
+          selectedProject={selectedProject}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          onView={agent => {
+            setSelectedAgent(agent);
+            setViewModalOpen(true);
+          }}
+          onEdit={agent => {
+            setSelectedAgent(agent);
+            setEditModalOpen(true);
+          }}
+          onAssign={agent => {
+            setSelectedAgent(agent);
+            setAssignRoutesModalOpen(true);
+          }}
+          onPerformance={agent => {
+            setSelectedAgent(agent);
+            setPerformanceModalOpen(true);
+          }}
+        />
 
-          <TabsContent value="agents">
-            <ServiceAgentsManagement
-              agents={filteredAgents}
-              searchTerm={searchTerm}
-              setSearchTerm={setSearchTerm}
-              onView={agent => {
-                setSelectedAgent(agent);
-                setViewModalOpen(true);
-              }}
-              onEdit={agent => {
-                setSelectedAgent(agent);
-                setEditModalOpen(true);
-              }}
-              onAssign={agent => {
-                setSelectedAgent(agent);
-                setAssignRoutesModalOpen(true);
-              }}
-              onPerformance={agent => {
-                setSelectedAgent(agent);
-                setPerformanceModalOpen(true);
-              }}
-            />
-          </TabsContent>
-
-          {hasPermission('assign_routes') && (
-            <TabsContent value="assignment">
-              <ServiceAgentsAssignment
-                agents={projectAgents}
-                projectId={selectedProject}
-              />
-            </TabsContent>
-          )}
-
-          {hasPermission('track_services') && (
-            <TabsContent value="delivery">
-              <ServiceAgentsTracking />
-            </TabsContent>
-          )}
-
-          {hasPermission('view_analytics') && (
-            <TabsContent value="analytics">
-              <ServiceAgentsAnalytics
-                agents={projectAgents}
-              />
-            </TabsContent>
-          )}
-        </Tabs>
-
-        <PermissionGate permissions={['view_agents']}>
-          <ViewAgentModal
-            agent={selectedAgent}
-            open={viewModalOpen}
-            onClose={() => setViewModalOpen(false)}
-          />
-        </PermissionGate>
-        
-        <PermissionGate permissions={['edit_agents']}>
-          <EditAgentModal
-            agent={selectedAgent}
-            open={editModalOpen}
-            onClose={() => setEditModalOpen(false)}
-          />
-        </PermissionGate>
-        
-        <PermissionGate permissions={['assign_routes']}>
-          <AssignRoutesModal
-            agent={selectedAgent}
-            open={assignRoutesModalOpen}
-            onClose={() => setAssignRoutesModalOpen(false)}
-          />
-        </PermissionGate>
-        
-        <PermissionGate permissions={['view_analytics']}>
-          <ViewPerformanceModal
-            agent={selectedAgent}
-            open={performanceModalOpen}
-            onClose={() => setPerformanceModalOpen(false)}
-          />
-        </PermissionGate>
+        <ServiceAgentsModals
+          selectedAgent={selectedAgent}
+          viewModalOpen={viewModalOpen}
+          editModalOpen={editModalOpen}
+          assignRoutesModalOpen={assignRoutesModalOpen}
+          performanceModalOpen={performanceModalOpen}
+          onCloseViewModal={() => setViewModalOpen(false)}
+          onCloseEditModal={() => setEditModalOpen(false)}
+          onCloseAssignRoutesModal={() => setAssignRoutesModalOpen(false)}
+          onClosePerformanceModal={() => setPerformanceModalOpen(false)}
+        />
       </div>
     </PermissionGate>
   );
