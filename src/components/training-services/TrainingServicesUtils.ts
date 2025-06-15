@@ -34,6 +34,21 @@ export interface TrainingStats {
   completedCamps: number;
   totalCitizensServed: number;
   avgCompletionRate: number;
+  targetCamps: number;
+  targetCitizens: number;
+  campsAchievementRate: number;
+  citizensAchievementRate: number;
+}
+
+export interface TrainingTarget {
+  id: string;
+  agentId: number;
+  agentName: string;
+  targetCamps: number;
+  targetCitizens: number;
+  actualCamps: number;
+  actualCitizens: number;
+  period: string;
 }
 
 export const trainingTypes: TrainingType[] = [
@@ -57,7 +72,7 @@ export const getCompletionRate = (completed: number, target: number): number => 
   return target > 0 ? (completed / target) * 100 : 0;
 };
 
-export const getOverallStats = (camps: TrainingCamp[]): TrainingStats => {
+export const getOverallStats = (camps: TrainingCamp[], targets: TrainingTarget[]): TrainingStats => {
   const totalCamps = camps.length;
   const completedCamps = camps.filter(c => c.status === 'completed').length;
   const totalCitizensServed = camps.reduce((sum, c) => sum + c.completedCitizens, 0);
@@ -65,5 +80,52 @@ export const getOverallStats = (camps: TrainingCamp[]): TrainingStats => {
     ? camps.reduce((sum, c) => sum + getCompletionRate(c.completedCitizens, c.targetCitizens), 0) / camps.length 
     : 0;
 
-  return { totalCamps, completedCamps, totalCitizensServed, avgCompletionRate };
+  const targetCamps = targets.reduce((sum, t) => sum + t.targetCamps, 0);
+  const targetCitizens = targets.reduce((sum, t) => sum + t.targetCitizens, 0);
+  const campsAchievementRate = targetCamps > 0 ? (totalCamps / targetCamps) * 100 : 0;
+  const citizensAchievementRate = targetCitizens > 0 ? (totalCitizensServed / targetCitizens) * 100 : 0;
+
+  return { 
+    totalCamps, 
+    completedCamps, 
+    totalCitizensServed, 
+    avgCompletionRate,
+    targetCamps,
+    targetCitizens,
+    campsAchievementRate,
+    citizensAchievementRate
+  };
 };
+
+export const mockTrainingTargets: TrainingTarget[] = [
+  {
+    id: '1',
+    agentId: 1,
+    agentName: 'Rajesh Kumar',
+    targetCamps: 5,
+    targetCitizens: 200,
+    actualCamps: 3,
+    actualCitizens: 142,
+    period: 'Q2 2024'
+  },
+  {
+    id: '2',
+    agentId: 2,
+    agentName: 'Priya Sharma',
+    targetCamps: 4,
+    targetCitizens: 150,
+    actualCamps: 4,
+    actualCitizens: 168,
+    period: 'Q2 2024'
+  },
+  {
+    id: '3',
+    agentId: 3,
+    agentName: 'Ahmed Hassan',
+    targetCamps: 3,
+    targetCitizens: 120,
+    actualCamps: 2,
+    actualCitizens: 85,
+    period: 'Q2 2024'
+  }
+];

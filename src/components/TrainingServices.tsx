@@ -1,21 +1,17 @@
 
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import TrainingServicesDashboard from './training-services/TrainingServicesDashboard';
-import TrainingCampForm from './training-services/TrainingCampForm';
 import TrainingCampsTable from './training-services/TrainingCampsTable';
-import { TrainingCamp, getOverallStats } from './training-services/TrainingServicesUtils';
+import TrainingTargetSetting from './training-services/TrainingTargetSetting';
+import TargetVsActualAnalysis from './training-services/TargetVsActualAnalysis';
+import { TrainingCamp, TrainingTarget, getOverallStats, mockTrainingTargets } from './training-services/TrainingServicesUtils';
 
 interface TrainingServicesProps {
   agents: any[];
 }
 
 const TrainingServices = ({ agents }: TrainingServicesProps) => {
-  const { toast } = useToast();
-  
   const [camps, setCamps] = useState<TrainingCamp[]>([
     {
       id: '1',
@@ -55,20 +51,21 @@ const TrainingServices = ({ agents }: TrainingServicesProps) => {
       endDate: new Date('2024-06-22'),
       targetCitizens: 75,
       registeredCitizens: 68,
-      completedCitizens: 0,
+      completedCitizens: 68,
       trainingType: 'awareness',
-      status: 'ongoing'
+      status: 'completed'
     }
   ]);
 
-  const [showNewCampForm, setShowNewCampForm] = useState(false);
+  const [targets, setTargets] = useState<TrainingTarget[]>(mockTrainingTargets);
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const stats = getOverallStats(camps);
+  const stats = getOverallStats(camps, targets);
 
-  const handleCreateCamp = () => {
-    toast({ title: "Training camp created successfully" });
-    setShowNewCampForm(false);
+  const handleUpdateTarget = (updatedTarget: TrainingTarget) => {
+    setTargets(prev => prev.map(target => 
+      target.id === updatedTarget.id ? updatedTarget : target
+    ));
   };
 
   return (
@@ -76,18 +73,21 @@ const TrainingServices = ({ agents }: TrainingServicesProps) => {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="text-lg font-semibold">Training Services Management</h3>
-          <p className="text-sm text-muted-foreground">Manage training camps, track citizen participation, and monitor M&E completion</p>
+          <p className="text-sm text-muted-foreground">Set targets, track training camps, and monitor target vs actual performance</p>
         </div>
-        <Button 
-          className="bg-green-600 hover:bg-green-700"
-          onClick={() => setShowNewCampForm(true)}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          New Training Camp
-        </Button>
       </div>
 
       <TrainingServicesDashboard stats={stats} />
+
+      {/* Target vs Actual Analysis */}
+      <TargetVsActualAnalysis targets={targets} />
+
+      {/* Target Setting */}
+      <TrainingTargetSetting 
+        targets={targets} 
+        agents={agents} 
+        onUpdateTarget={handleUpdateTarget} 
+      />
 
       <div className="flex gap-4 items-center">
         <Select value={selectedFilter} onValueChange={setSelectedFilter}>
@@ -105,13 +105,6 @@ const TrainingServices = ({ agents }: TrainingServicesProps) => {
       </div>
 
       <TrainingCampsTable camps={camps} />
-
-      <TrainingCampForm
-        open={showNewCampForm}
-        onOpenChange={setShowNewCampForm}
-        agents={agents}
-        onSubmit={handleCreateCamp}
-      />
     </div>
   );
 };
