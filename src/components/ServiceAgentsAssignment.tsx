@@ -1,8 +1,8 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, MapPin, Calendar } from 'lucide-react';
-import AgentProjectAssignment from './AgentProjectAssignment';
+import { Target, MapPin, Calendar } from 'lucide-react';
+import ServiceAssignment from './ServiceAssignment';
 import RouteAssignment from './RouteAssignment';
 import TimeBoundRouteAssignment from './TimeBoundRouteAssignment';
 
@@ -19,15 +19,15 @@ const ServiceAgentsAssignment: React.FC<ServiceAgentsAssignmentProps> = ({
     <div>
       <h3 className="text-lg font-semibold mb-2">Assignment & Scheduling Management</h3>
       <p className="text-sm text-muted-foreground">
-        Manage agent assignments, route planning, and scheduling with conflict detection
+        Assign services with targets, manage routes, and schedule with conflict detection
       </p>
     </div>
     
-    <Tabs defaultValue="project-assignment" className="space-y-6">
+    <Tabs defaultValue="service-assignment" className="space-y-6">
       <TabsList className="grid w-full grid-cols-3">
-        <TabsTrigger value="project-assignment" className="flex items-center gap-2">
-          <Users className="h-4 w-4" />
-          Project Assignment
+        <TabsTrigger value="service-assignment" className="flex items-center gap-2">
+          <Target className="h-4 w-4" />
+          Service Assignment
         </TabsTrigger>
         <TabsTrigger value="route-management" className="flex items-center gap-2">
           <MapPin className="h-4 w-4" />
@@ -39,8 +39,8 @@ const ServiceAgentsAssignment: React.FC<ServiceAgentsAssignmentProps> = ({
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="project-assignment">
-        <AgentProjectAssignment agents={agents} />
+      <TabsContent value="service-assignment">
+        <ServiceAssignment agents={agents} />
       </TabsContent>
 
       <TabsContent value="route-management">
