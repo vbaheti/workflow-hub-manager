@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
-import { MapPin, Plus, Search, Users, Route, Edit, CalendarIcon, Clock, Navigation, CheckCircle, AlertTriangle } from 'lucide-react';
+import { MapPin, Plus, Search, Users, Route, Edit, CalendarIcon, Clock, Navigation, CheckCircle, AlertTriangle, X, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -24,6 +24,16 @@ interface Agent {
   status: string;
 }
 
+interface LocationAssignment {
+  id: string;
+  village: string;
+  startDate: Date;
+  endDate: Date;
+  actualCheckIn?: Date;
+  actualCheckOut?: Date;
+  status: 'scheduled' | 'checked-in' | 'completed' | 'missed';
+}
+
 interface RouteAssignment {
   id: string;
   agentId: number;
@@ -32,8 +42,7 @@ interface RouteAssignment {
   state: string;
   district: string;
   taluk: string;
-  locations: string[];
-  scheduledDates: Date[];
+  locationAssignments: LocationAssignment[];
   status: 'scheduled' | 'in-progress' | 'completed' | 'overdue';
   targetVisits: number;
   completedVisits: number;
@@ -47,24 +56,39 @@ interface RouteAssignmentProps {
 
 const locationHierarchy = {
   "Delhi": {
-    "Central Delhi": ["Connaught Place", "Karol Bagh", "Paharganj"],
-    "North Delhi": ["Civil Lines", "Model Town", "Kamla Nagar"],
-    "South Delhi": ["Greater Kailash", "Lajpat Nagar", "Saket"]
+    "Central Delhi": {
+      "Connaught Place": ["CP Village", "Metro Colony", "Business District"],
+      "Karol Bagh": ["Karol Village", "Market Area", "Residential Zone"],
+      "Paharganj": ["Main Bazaar Village", "Hotel District", "Railway Colony"]
+    },
+    "North Delhi": {
+      "Civil Lines": ["Civil Village", "University Area", "Government Colony"],
+      "Model Town": ["Model Village", "Shopping Complex", "Metro Station Area"],
+      "Kamla Nagar": ["Kamla Village", "Market Complex", "Student Area"]
+    },
+    "South Delhi": {
+      "Greater Kailash": ["GK Village", "M Block Market", "N Block"],
+      "Lajpat Nagar": ["Lajpat Village", "Central Market", "Metro Area"],
+      "Saket": ["Saket Village", "Mall Area", "Residential Complex"]
+    }
   },
   "Maharashtra": {
-    "Mumbai": ["Bandra", "Andheri", "Borivali", "Thane"],
-    "Pune": ["Shivaji Nagar", "Kothrud", "Hadapsar"],
-    "Nashik": ["College Road", "Gangapur Road", "Panchavati"]
-  },
-  "Karnataka": {
-    "Bangalore Urban": ["Whitefield", "Koramangala", "Jayanagar", "Electronic City"],
-    "Mysore": ["Chamundeshwari", "Krishnaraja", "Narasimharaja"],
-    "Hubli": ["Dharwad", "Keshwapur", "Vidyagiri"]
-  },
-  "Tamil Nadu": {
-    "Chennai": ["T. Nagar", "Anna Nagar", "Velachery", "Tambaram"],
-    "Coimbatore": ["RS Puram", "Peelamedu", "Saravanampatti"],
-    "Madurai": ["Anna Nagar", "KK Nagar", "Pasumalai"]
+    "Mumbai": {
+      "Bandra": ["Bandra Village", "Linking Road", "Carter Road"],
+      "Andheri": ["Andheri Village", "MIDC Area", "Station Road"],
+      "Borivali": ["Borivali Village", "National Park Area", "Station Complex"],
+      "Thane": ["Thane Village", "Creek Area", "Industrial Zone"]
+    },
+    "Pune": {
+      "Shivaji Nagar": ["Shivaji Village", "JM Road", "Camp Area"],
+      "Kothrud": ["Kothrud Village", "University Area", "Market Zone"],
+      "Hadapsar": ["Hadapsar Village", "IT Park", "Residential Area"]
+    },
+    "Nashik": {
+      "College Road": ["College Village", "University Area", "Market Zone"],
+      "Gangapur Road": ["Gangapur Village", "Industrial Area", "Highway Zone"],
+      "Panchavati": ["Panchavati Village", "Temple Area", "Old City"]
+    }
   }
 };
 
@@ -73,8 +97,6 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
   const [selectedState, setSelectedState] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [selectedTaluk, setSelectedTaluk] = useState('');
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [selectedDates, setSelectedDates] = useState<Date[]>([]);
   const [routeName, setRouteName] = useState('');
   const [targetVisits, setTargetVisits] = useState('');
   const [notes, setNotes] = useState('');
@@ -83,6 +105,7 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
   const [showMapEntry, setShowMapEntry] = useState(false);
   const [filterState, setFilterState] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [locationAssignments, setLocationAssignments] = useState<LocationAssignment[]>([]);
   
   const { toast } = useToast();
 
@@ -95,8 +118,25 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
       state: 'Delhi',
       district: 'Central Delhi',
       taluk: 'Connaught Place',
-      locations: ['Connaught Place', 'Karol Bagh'],
-      scheduledDates: [new Date('2024-06-15'), new Date('2024-06-16')],
+      locationAssignments: [
+        {
+          id: '1',
+          village: 'CP Village',
+          startDate: new Date('2024-06-15'),
+          endDate: new Date('2024-06-15'),
+          actualCheckIn: new Date('2024-06-15T09:15:00'),
+          actualCheckOut: new Date('2024-06-15T17:30:00'),
+          status: 'completed'
+        },
+        {
+          id: '2',
+          village: 'Metro Colony',
+          startDate: new Date('2024-06-16'),
+          endDate: new Date('2024-06-16'),
+          actualCheckIn: new Date('2024-06-16T10:00:00'),
+          status: 'checked-in'
+        }
+      ],
       status: 'in-progress',
       targetVisits: 10,
       completedVisits: 7,
@@ -111,8 +151,22 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
       state: 'Maharashtra',
       district: 'Mumbai',
       taluk: 'Bandra',
-      locations: ['Bandra', 'Andheri'],
-      scheduledDates: [new Date('2024-06-17')],
+      locationAssignments: [
+        {
+          id: '3',
+          village: 'Bandra Village',
+          startDate: new Date('2024-06-17'),
+          endDate: new Date('2024-06-17'),
+          status: 'scheduled'
+        },
+        {
+          id: '4',
+          village: 'Linking Road',
+          startDate: new Date('2024-06-17'),
+          endDate: new Date('2024-06-18'),
+          status: 'scheduled'
+        }
+      ],
       status: 'scheduled',
       targetVisits: 8,
       completedVisits: 0,
@@ -124,34 +178,49 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
   const states = Object.keys(locationHierarchy);
   const districts = selectedState ? Object.keys(locationHierarchy[selectedState as keyof typeof locationHierarchy] || {}) : [];
   const taluks = selectedState && selectedDistrict ? 
-    locationHierarchy[selectedState as keyof typeof locationHierarchy]?.[selectedDistrict as keyof typeof locationHierarchy[keyof typeof locationHierarchy]] || [] : [];
+    Object.keys(locationHierarchy[selectedState as keyof typeof locationHierarchy]?.[selectedDistrict as keyof typeof locationHierarchy[keyof typeof locationHierarchy]] || {}) : [];
+  const villages = selectedState && selectedDistrict && selectedTaluk ?
+    locationHierarchy[selectedState as keyof typeof locationHierarchy]?.[selectedDistrict as keyof typeof locationHierarchy[keyof typeof locationHierarchy]]?.[selectedTaluk as keyof typeof locationHierarchy[keyof typeof locationHierarchy][keyof typeof locationHierarchy[keyof typeof locationHierarchy]]] || [] : [];
 
-  const handleLocationToggle = (location: string) => {
-    setSelectedLocations(prev => 
-      prev.includes(location) 
-        ? prev.filter(l => l !== location)
-        : [...prev, location]
-    );
+  const addLocationAssignment = () => {
+    const newAssignment: LocationAssignment = {
+      id: Date.now().toString(),
+      village: '',
+      startDate: new Date(),
+      endDate: new Date(),
+      status: 'scheduled'
+    };
+    setLocationAssignments([...locationAssignments, newAssignment]);
   };
 
-  const handleDateSelect = (date: Date | undefined) => {
-    if (!date) return;
-    
-    const dateString = format(date, 'yyyy-MM-dd');
-    const exists = selectedDates.some(d => format(d, 'yyyy-MM-dd') === dateString);
-    
-    if (exists) {
-      setSelectedDates(selectedDates.filter(d => format(d, 'yyyy-MM-dd') !== dateString));
-    } else {
-      setSelectedDates([...selectedDates, date]);
-    }
+  const updateLocationAssignment = (id: string, updates: Partial<LocationAssignment>) => {
+    setLocationAssignments(locationAssignments.map(assignment => 
+      assignment.id === id ? { ...assignment, ...updates } : assignment
+    ));
+  };
+
+  const removeLocationAssignment = (id: string) => {
+    setLocationAssignments(locationAssignments.filter(assignment => assignment.id !== id));
   };
 
   const handleCreateAssignment = () => {
-    if (!selectedAgent || !routeName || selectedLocations.length === 0 || selectedDates.length === 0 || !targetVisits) {
+    if (!selectedAgent || !routeName || locationAssignments.length === 0 || !targetVisits) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields.",
+        description: "Please fill in all required fields and add at least one location.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const incompleteAssignments = locationAssignments.filter(assignment => 
+      !assignment.village || !assignment.startDate || !assignment.endDate
+    );
+
+    if (incompleteAssignments.length > 0) {
+      toast({
+        title: "Error",
+        description: "Please complete all location assignments.",
         variant: "destructive"
       });
       return;
@@ -165,8 +234,7 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
       state: selectedState,
       district: selectedDistrict,
       taluk: selectedTaluk,
-      locations: selectedLocations,
-      scheduledDates: selectedDates,
+      locationAssignments: locationAssignments,
       status: 'scheduled',
       targetVisits: parseInt(targetVisits),
       completedVisits: 0,
@@ -179,11 +247,13 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
     // Reset form
     setSelectedAgent('');
     setRouteName('');
-    setSelectedLocations([]);
-    setSelectedDates([]);
+    setLocationAssignments([]);
     setTargetVisits('');
     setNotes('');
     setPriority('medium');
+    setSelectedState('');
+    setSelectedDistrict('');
+    setSelectedTaluk('');
 
     toast({
       title: "Success",
@@ -203,6 +273,15 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
       overdue: <Badge className="bg-red-100 text-red-800">Overdue</Badge>
     };
     return variants[status as keyof typeof variants];
+  };
+
+  const getLocationStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case 'checked-in': return <Clock className="h-4 w-4 text-yellow-500" />;
+      case 'missed': return <AlertTriangle className="h-4 w-4 text-red-500" />;
+      default: return <MapPin className="h-4 w-4 text-gray-400" />;
+    }
   };
 
   const getPriorityColor = (priority: string) => {
@@ -315,7 +394,7 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
           <div className="flex justify-between items-center">
             <div>
               <CardTitle>Create Route Assignment</CardTitle>
-              <p className="text-muted-foreground mt-2">Assign routes to agents with location hierarchy and scheduling</p>
+              <p className="text-muted-foreground mt-2">Assign routes to agents with village-specific scheduling and check-in tracking</p>
             </div>
             <div className="flex gap-2">
               <Button 
@@ -385,7 +464,6 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
                     setSelectedState(value);
                     setSelectedDistrict('');
                     setSelectedTaluk('');
-                    setSelectedLocations([]);
                   }}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select state" />
@@ -403,7 +481,6 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
                   <Select value={selectedDistrict} onValueChange={(value) => {
                     setSelectedDistrict(value);
                     setSelectedTaluk('');
-                    setSelectedLocations([]);
                   }} disabled={!selectedState}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select district" />
@@ -417,7 +494,7 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium">Taluk</label>
+                  <label className="text-sm font-medium">Taluk *</label>
                   <Select value={selectedTaluk} onValueChange={setSelectedTaluk} disabled={!selectedDistrict}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select taluk" />
@@ -431,63 +508,106 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
                 </div>
               </div>
 
-              {selectedDistrict && (
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Select Locations *</label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {taluks.map(location => (
-                      <div key={location} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={location}
-                          checked={selectedLocations.includes(location)}
-                          onChange={() => handleLocationToggle(location)}
-                          className="rounded"
-                        />
-                        <label htmlFor={location} className="text-sm">{location}</label>
-                      </div>
-                    ))}
-                  </div>
+              {/* Location Assignments */}
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium">Village Assignments *</label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={addLocationAssignment}
+                    disabled={!selectedTaluk}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Village
+                  </Button>
                 </div>
-              )}
+
+                {locationAssignments.map((assignment) => (
+                  <div key={assignment.id} className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 border rounded-lg">
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Village</label>
+                      <Select 
+                        value={assignment.village} 
+                        onValueChange={(value) => updateLocationAssignment(assignment.id, { village: value })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select village" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {villages.map(village => (
+                            <SelectItem key={village} value={village}>{village}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">Start Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {assignment.startDate ? format(assignment.startDate, 'MMM dd') : 'Select date'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={assignment.startDate}
+                            onSelect={(date) => date && updateLocationAssignment(assignment.id, { startDate: date })}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium">End Date</label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start text-left font-normal">
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {assignment.endDate ? format(assignment.endDate, 'MMM dd') : 'Select date'}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={assignment.endDate}
+                            onSelect={(date) => date && updateLocationAssignment(assignment.id, { endDate: date })}
+                            initialFocus
+                            className={cn("p-3 pointer-events-auto")}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+
+                    <div className="flex items-end">
+                      <Button 
+                        type="button"
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => removeLocationAssignment(assignment.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {locationAssignments.length === 0 && selectedTaluk && (
+                  <div className="text-center p-8 border-2 border-dashed border-gray-300 rounded-lg">
+                    <MapPin className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600">No villages assigned yet. Click "Add Village" to start.</p>
+                  </div>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Schedule Dates *</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className="w-full justify-start text-left font-normal"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {selectedDates.length === 0 ? (
-                          <span>Select dates</span>
-                        ) : (
-                          <span>{selectedDates.length} date(s) selected</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        onSelect={handleDateSelect}
-                        initialFocus
-                        className={cn("p-3 pointer-events-auto")}
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  {selectedDates.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {selectedDates.map((date, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {format(date, 'MMM dd')}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Target Visits *</label>
                   <Input
@@ -497,15 +617,15 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
                     placeholder="Enter target number of visits"
                   />
                 </div>
-              </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Notes</label>
-                <Input
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Additional notes or instructions"
-                />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Notes</label>
+                  <Input
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Additional notes or instructions"
+                  />
+                </div>
               </div>
 
               <Button onClick={handleCreateAssignment} className="w-full">
@@ -529,7 +649,7 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Route Assignments & Progress</CardTitle>
+            <CardTitle>Route Assignments & Check-in Progress</CardTitle>
             <div className="flex gap-4">
               <Select value={filterState} onValueChange={setFilterState}>
                 <SelectTrigger className="w-[180px]">
@@ -564,8 +684,8 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
               <TableRow>
                 <TableHead>Agent</TableHead>
                 <TableHead>Route</TableHead>
-                <TableHead>Location</TableHead>
-                <TableHead>Schedule</TableHead>
+                <TableHead>Village Assignments</TableHead>
+                <TableHead>Check-in Status</TableHead>
                 <TableHead>Progress</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Priority</TableHead>
@@ -575,6 +695,8 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
             <TableBody>
               {filteredAssignments.map((assignment) => {
                 const progressPercentage = getProgressPercentage(assignment.completedVisits, assignment.targetVisits);
+                const completedLocations = assignment.locationAssignments.filter(loc => loc.status === 'completed').length;
+                const totalLocations = assignment.locationAssignments.length;
                 
                 return (
                   <TableRow key={assignment.id}>
@@ -591,6 +713,7 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
                     <TableCell>
                       <div className="space-y-1">
                         <span className="font-medium">{assignment.routeName}</span>
+                        <p className="text-xs text-gray-500">{assignment.state} → {assignment.district} → {assignment.taluk}</p>
                         {assignment.notes && (
                           <p className="text-xs text-gray-500 truncate max-w-xs">{assignment.notes}</p>
                         )}
@@ -598,35 +721,48 @@ const RouteAssignment = ({ agents }: RouteAssignmentProps) => {
                     </TableCell>
                     <TableCell>
                       <div className="space-y-1">
-                        <div className="flex items-center space-x-1">
-                          <MapPin className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm font-medium">{assignment.state}</span>
-                        </div>
-                        <p className="text-xs text-gray-600">{assignment.district}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {assignment.locations.slice(0, 2).map((location, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {location}
-                            </Badge>
+                        <div className="text-sm font-medium">{totalLocations} Villages</div>
+                        <div className="space-y-1">
+                          {assignment.locationAssignments.slice(0, 2).map((location) => (
+                            <div key={location.id} className="flex items-center space-x-2">
+                              {getLocationStatusIcon(location.status)}
+                              <span className="text-xs">{location.village}</span>
+                              <span className="text-xs text-gray-500">
+                                {format(location.startDate, 'MMM dd')}
+                                {location.startDate.getTime() !== location.endDate.getTime() && 
+                                  ` - ${format(location.endDate, 'MMM dd')}`
+                                }
+                              </span>
+                            </div>
                           ))}
-                          {assignment.locations.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{assignment.locations.length - 2} more
-                            </Badge>
+                          {totalLocations > 2 && (
+                            <div className="text-xs text-gray-500">+{totalLocations - 2} more villages</div>
                           )}
                         </div>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="space-y-1">
-                        <div className="flex items-center space-x-1">
-                          <CalendarIcon className="h-3 w-3 text-gray-500" />
-                          <span className="text-sm">{assignment.scheduledDates.length} days</span>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="text-sm">{completedLocations}/{totalLocations} completed</div>
+                          {completedLocations === totalLocations && totalLocations > 0 && (
+                            <Check className="h-4 w-4 text-green-500" />
+                          )}
                         </div>
-                        <p className="text-xs text-gray-600">
-                          {format(assignment.scheduledDates[0], "MMM dd")}
-                          {assignment.scheduledDates.length > 1 && ` - ${format(assignment.scheduledDates[assignment.scheduledDates.length - 1], "MMM dd")}`}
-                        </p>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
+                          <div 
+                            className="bg-green-500 h-1.5 rounded-full"
+                            style={{ width: `${totalLocations > 0 ? (completedLocations / totalLocations) * 100 : 0}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {assignment.locationAssignments
+                            .filter(loc => loc.actualCheckIn)
+                            .map(loc => `${loc.village}: ${format(loc.actualCheckIn!, 'HH:mm')}`)
+                            .slice(0, 1)
+                            .join(', ')}
+                          {assignment.locationAssignments.filter(loc => loc.actualCheckIn).length > 1 && '...'}
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
