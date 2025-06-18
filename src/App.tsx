@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import Layout from './components/Layout';
 import Index from './pages/Index';
+import Auth from './pages/Auth';
 import NotFound from './pages/NotFound';
 import Dashboard from './components/Dashboard';
 import ServiceAgents from './components/ServiceAgents';
@@ -17,6 +18,8 @@ import ApprovalWorkflow from './components/ApprovalWorkflow';
 import ServicePriceSetting from './components/ServicePriceSetting';
 import BankDetails from './components/BankDetails';
 import ServicePricingManagement from './components/ServicePricingManagement';
+import ProtectedRoute from './components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
 import { StateProvider } from './contexts/StateContext';
 import { RBACProvider } from './contexts/RBACContext';
@@ -27,33 +30,106 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RBACProvider>
-        <ProjectProvider>
-          <StateProvider>
-            <ApprovalProvider>
-              <Router>
-                <Layout>
+      <AuthProvider>
+        <RBACProvider>
+          <ProjectProvider>
+            <StateProvider>
+              <ApprovalProvider>
+                <Router>
                   <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/dashboard" element={<Dashboard />} />
-                    <Route path="/agents" element={<ServiceAgents />} />
-                    <Route path="/fees" element={<FeeCollection />} />
-                    <Route path="/transactions" element={<FinancialTransactions />} />
-                    <Route path="/reimbursements" element={<Reimbursements />} />
-                    <Route path="/hrms" element={<HRMS />} />
-                    <Route path="/commissions" element={<CommissionApproval />} />
-                    <Route path="/pricing" element={<ServicePricingManagement />} />
-                    <Route path="/bank-details" element={<BankDetails />} />
-                    <Route path="/approvals" element={<ApprovalWorkflow />} />
-                    <Route path="/settings" element={<Settings />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Dashboard />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/dashboard" element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Dashboard />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/agents" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor', 'agent']}>
+                        <Layout>
+                          <ServiceAgents />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/fees" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor', 'agent']}>
+                        <Layout>
+                          <FeeCollection />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/transactions" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor']}>
+                        <Layout>
+                          <FinancialTransactions />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/reimbursements" element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Reimbursements />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/hrms" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
+                        <Layout>
+                          <HRMS />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/commissions" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
+                        <Layout>
+                          <CommissionApproval />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/pricing" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
+                        <Layout>
+                          <ServicePricingManagement />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/bank-details" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
+                        <Layout>
+                          <BankDetails />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/approvals" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor']}>
+                        <Layout>
+                          <ApprovalWorkflow />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/settings" element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Settings />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
                     <Route path="*" element={<NotFound />} />
                   </Routes>
-                </Layout>
-              </Router>
-            </ApprovalProvider>
-          </StateProvider>
-        </ProjectProvider>
-      </RBACProvider>
+                </Router>
+              </ApprovalProvider>
+            </StateProvider>
+          </ProjectProvider>
+        </RBACProvider>
+      </AuthProvider>
       <Toaster />
     </QueryClientProvider>
   );

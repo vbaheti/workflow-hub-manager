@@ -9,16 +9,115 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      agents: {
+        Row: {
+          area: string | null
+          assigned_routes: string[] | null
+          created_at: string | null
+          created_by: string | null
+          district: string | null
+          email: string
+          id: number
+          location: string | null
+          name: string
+          performance_score: number | null
+          phone: string | null
+          services_completed: number | null
+          state: string | null
+          status: string | null
+          total_collections: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          area?: string | null
+          assigned_routes?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          district?: string | null
+          email: string
+          id?: number
+          location?: string | null
+          name: string
+          performance_score?: number | null
+          phone?: string | null
+          services_completed?: number | null
+          state?: string | null
+          status?: string | null
+          total_collections?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          area?: string | null
+          assigned_routes?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          district?: string | null
+          email?: string
+          id?: number
+          location?: string | null
+          name?: string
+          performance_score?: number | null
+          phone?: string | null
+          services_completed?: number | null
+          state?: string | null
+          status?: string | null
+          total_collections?: number | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string
+          full_name: string | null
+          id: string
+          partner_id: string | null
+          project_id: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          full_name?: string | null
+          id: string
+          partner_id?: string | null
+          project_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          full_name?: string | null
+          id?: string
+          partner_id?: string | null
+          project_id?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_id: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role:
+        | "super_admin"
+        | "admin"
+        | "manager"
+        | "supervisor"
+        | "agent"
+        | "viewer"
+        | "partner_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +232,16 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: [
+        "super_admin",
+        "admin",
+        "manager",
+        "supervisor",
+        "agent",
+        "viewer",
+        "partner_admin",
+      ],
+    },
   },
 } as const
