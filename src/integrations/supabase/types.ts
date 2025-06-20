@@ -99,6 +99,184 @@ export type Database = {
         }
         Relationships: []
       }
+      projects: {
+        Row: {
+          agent_count: number | null
+          created_at: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          location: string | null
+          name: string
+          route_count: number | null
+          start_date: string | null
+          state: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          name: string
+          route_count?: number | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_count?: number | null
+          created_at?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          location?: string | null
+          name?: string
+          route_count?: number | null
+          start_date?: string | null
+          state?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      training_camps: {
+        Row: {
+          agent_id: number | null
+          agent_name: string
+          camp_feedback: string | null
+          camp_name: string
+          completed_citizens: number | null
+          created_at: string | null
+          district: string | null
+          end_date: string
+          id: string
+          location: string | null
+          me_completed_date: string | null
+          me_score: number | null
+          registered_citizens: number | null
+          start_date: string
+          state: string | null
+          status: Database["public"]["Enums"]["training_status"] | null
+          taluk: string | null
+          target_citizens: number | null
+          trainer_id: number | null
+          trainer_name: string | null
+          training_type: Database["public"]["Enums"]["training_type"] | null
+          updated_at: string | null
+          village: string | null
+        }
+        Insert: {
+          agent_id?: number | null
+          agent_name: string
+          camp_feedback?: string | null
+          camp_name: string
+          completed_citizens?: number | null
+          created_at?: string | null
+          district?: string | null
+          end_date: string
+          id?: string
+          location?: string | null
+          me_completed_date?: string | null
+          me_score?: number | null
+          registered_citizens?: number | null
+          start_date: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["training_status"] | null
+          taluk?: string | null
+          target_citizens?: number | null
+          trainer_id?: number | null
+          trainer_name?: string | null
+          training_type?: Database["public"]["Enums"]["training_type"] | null
+          updated_at?: string | null
+          village?: string | null
+        }
+        Update: {
+          agent_id?: number | null
+          agent_name?: string
+          camp_feedback?: string | null
+          camp_name?: string
+          completed_citizens?: number | null
+          created_at?: string | null
+          district?: string | null
+          end_date?: string
+          id?: string
+          location?: string | null
+          me_completed_date?: string | null
+          me_score?: number | null
+          registered_citizens?: number | null
+          start_date?: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["training_status"] | null
+          taluk?: string | null
+          target_citizens?: number | null
+          trainer_id?: number | null
+          trainer_name?: string | null
+          training_type?: Database["public"]["Enums"]["training_type"] | null
+          updated_at?: string | null
+          village?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_camps_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      training_targets: {
+        Row: {
+          actual_camps: number | null
+          actual_citizens: number | null
+          agent_id: number | null
+          agent_name: string
+          created_at: string | null
+          id: string
+          period: string
+          target_camps: number | null
+          target_citizens: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          actual_camps?: number | null
+          actual_citizens?: number | null
+          agent_id?: number | null
+          agent_name: string
+          created_at?: string | null
+          id?: string
+          period: string
+          target_camps?: number | null
+          target_citizens?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          actual_camps?: number | null
+          actual_citizens?: number | null
+          agent_id?: number | null
+          agent_name?: string
+          created_at?: string | null
+          id?: string
+          period?: string
+          target_camps?: number | null
+          target_citizens?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_targets_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -110,6 +288,16 @@ export type Database = {
       }
     }
     Enums: {
+      approval_status: "pending" | "approved" | "rejected"
+      employee_status: "active" | "inactive" | "on_leave" | "terminated"
+      payment_status: "pending" | "paid" | "failed" | "refunded"
+      service_status: "pending" | "in_progress" | "completed" | "cancelled"
+      training_status: "planned" | "ongoing" | "completed" | "me_pending"
+      training_type:
+        | "skill_development"
+        | "awareness"
+        | "capacity_building"
+        | "livelihood"
       user_role:
         | "super_admin"
         | "admin"
@@ -233,6 +421,17 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      approval_status: ["pending", "approved", "rejected"],
+      employee_status: ["active", "inactive", "on_leave", "terminated"],
+      payment_status: ["pending", "paid", "failed", "refunded"],
+      service_status: ["pending", "in_progress", "completed", "cancelled"],
+      training_status: ["planned", "ongoing", "completed", "me_pending"],
+      training_type: [
+        "skill_development",
+        "awareness",
+        "capacity_building",
+        "livelihood",
+      ],
       user_role: [
         "super_admin",
         "admin",

@@ -19,24 +19,24 @@ export const useTrainingData = () => {
       if (error) throw error;
 
       const formattedCamps: TrainingCamp[] = (data || []).map(camp => ({
-        id: camp.id,
-        agentId: camp.agent_id,
-        agentName: camp.agent_name,
+        id: String(camp.id),
+        agentId: camp.agent_id || 0,
+        agentName: camp.agent_name || '',
         trainerId: camp.trainer_id || 0,
         trainerName: camp.trainer_name || '',
-        campName: camp.camp_name,
-        location: camp.location,
-        state: camp.state,
+        campName: camp.camp_name || '',
+        location: camp.location || '',
+        state: camp.state || '',
         district: camp.district || '',
         taluk: camp.taluk || '',
         village: camp.village || '',
         startDate: new Date(camp.start_date),
         endDate: new Date(camp.end_date),
-        targetCitizens: camp.target_citizens,
-        registeredCitizens: camp.registered_citizens,
-        completedCitizens: camp.completed_citizens,
-        trainingType: camp.training_type as any,
-        status: camp.status as any,
+        targetCitizens: camp.target_citizens || 0,
+        registeredCitizens: camp.registered_citizens || 0,
+        completedCitizens: camp.completed_citizens || 0,
+        trainingType: camp.training_type as any || 'skill_development',
+        status: camp.status as any || 'planned',
         meCompletedDate: camp.me_completed_date ? new Date(camp.me_completed_date) : undefined,
         meScore: camp.me_score || undefined,
         campFeedback: camp.camp_feedback || undefined
@@ -59,14 +59,14 @@ export const useTrainingData = () => {
       if (error) throw error;
 
       const formattedTargets: TrainingTarget[] = (data || []).map(target => ({
-        id: target.id,
-        agentId: target.agent_id,
-        agentName: target.agent_name,
-        targetCamps: target.target_camps,
-        targetCitizens: target.target_citizens,
-        actualCamps: target.actual_camps,
-        actualCitizens: target.actual_citizens,
-        period: target.period
+        id: String(target.id),
+        agentId: target.agent_id || 0,
+        agentName: target.agent_name || '',
+        targetCamps: target.target_camps || 0,
+        targetCitizens: target.target_citizens || 0,
+        actualCamps: target.actual_camps || 0,
+        actualCitizens: target.actual_citizens || 0,
+        period: target.period || ''
       }));
 
       setTargets(formattedTargets);

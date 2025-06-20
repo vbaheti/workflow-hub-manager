@@ -1,5 +1,6 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useProjects } from '@/hooks/useProjects';
 
 interface Project {
   id: string;
@@ -19,46 +20,37 @@ interface ProjectContextType {
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 
-const defaultProjects: Project[] = [
-  {
-    id: 'project-alpha',
-    name: 'Project Alpha',
-    status: 'active',
-    agentCount: 3,
-    routeCount: 5,
-    description: 'Manhattan and Brooklyn field operations'
-  },
-  {
-    id: 'project-beta',
-    name: 'Project Beta',
-    status: 'active',
-    agentCount: 2,
-    routeCount: 4,
-    description: 'West Coast expansion initiative'
-  },
-  {
-    id: 'project-gamma',
-    name: 'Project Gamma',
-    status: 'on-hold',
-    agentCount: 1,
-    routeCount: 2,
-    description: 'Chicago market research'
-  }
-];
-
 interface ProjectProviderProps {
   children: ReactNode;
 }
 
 export const ProjectProvider = ({ children }: ProjectProviderProps) => {
-  const [selectedProject, setSelectedProject] = useState('project-alpha');
+  const [selectedProject, setSelectedProject] = useState('');
+  const { projects: dbProjects, loading } = useProjects();
 
-  const currentProject = defaultProjects.find(p => p.id === selectedProject);
+  // Transform database projects to match the interface
+  const projects: Project[] = dbProjects.map(project => ({
+    id: project.id,
+    name: project.name,
+    status: project.status as 'active' | 'completed' | 'on-hold',
+    agentCount: project.agent_count,
+    routeCount: project.route_count,
+    description: project.description || ''
+  }));
+
+  // Set the first project as selected when projects load
+  useEffect(() => {
+    if (projects.length > 0 && !selectedProject) {
+      setSelectedProject(projects[0].id);
+    }
+  }, [projects, selectedProject]);
+
+  const currentProject = projects.find(p => p.id === selectedProject);
 
   const value = {
     selectedProject,
     setSelectedProject,
-    projects: defaultProjects,
+    projects,
     currentProject
   };
 

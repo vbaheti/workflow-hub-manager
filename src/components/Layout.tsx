@@ -19,9 +19,9 @@ import {
   Menu
 } from 'lucide-react';
 import UserProfile from './UserProfile';
-import ProjectSelector from './ProjectSelector';
 import StateSelector from './StateSelector';
 import RoleSelector from './RoleSelector';
+import { useProject } from '@/contexts/ProjectContext';
 
 const sidebarItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -44,6 +44,7 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  const { selectedProject, setSelectedProject, projects } = useProject();
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
@@ -57,7 +58,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Project and State Selectors */}
       <div className="space-y-4 p-4 border-b">
-        <ProjectSelector />
+        <ProjectSelector 
+          selectedProject={selectedProject}
+          onProjectChange={setSelectedProject}
+          projects={projects}
+        />
         <StateSelector />
         <RoleSelector />
       </div>
