@@ -66,6 +66,361 @@ export type Database = {
         }
         Relationships: []
       }
+      approval_workflows: {
+        Row: {
+          approved_by: string[] | null
+          created_at: string | null
+          current_approver: string | null
+          current_step: number | null
+          entity_id: string
+          id: string
+          rejected_by: string | null
+          rejection_reason: string | null
+          requested_by: string | null
+          status: Database["public"]["Enums"]["approval_status"] | null
+          total_steps: number | null
+          updated_at: string | null
+          workflow_type: string
+        }
+        Insert: {
+          approved_by?: string[] | null
+          created_at?: string | null
+          current_approver?: string | null
+          current_step?: number | null
+          entity_id: string
+          id?: string
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["approval_status"] | null
+          total_steps?: number | null
+          updated_at?: string | null
+          workflow_type: string
+        }
+        Update: {
+          approved_by?: string[] | null
+          created_at?: string | null
+          current_approver?: string | null
+          current_step?: number | null
+          entity_id?: string
+          id?: string
+          rejected_by?: string | null
+          rejection_reason?: string | null
+          requested_by?: string | null
+          status?: Database["public"]["Enums"]["approval_status"] | null
+          total_steps?: number | null
+          updated_at?: string | null
+          workflow_type?: string
+        }
+        Relationships: []
+      }
+      bank_details: {
+        Row: {
+          account_holder_name: string
+          account_number: string
+          account_type: string | null
+          bank_name: string
+          branch_name: string | null
+          created_at: string | null
+          created_by: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          ifsc_code: string
+          is_primary: boolean | null
+          is_verified: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_holder_name: string
+          account_number: string
+          account_type?: string | null
+          bank_name: string
+          branch_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          ifsc_code: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_holder_name?: string
+          account_number?: string
+          account_type?: string | null
+          bank_name?: string
+          branch_name?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ifsc_code?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      commission_approvals: {
+        Row: {
+          agent_id: number | null
+          approved_at: string | null
+          approved_by: string | null
+          bonus_amount: number | null
+          created_at: string | null
+          created_by: string | null
+          deduction_amount: number | null
+          final_amount: number
+          id: string
+          payment_date: string | null
+          period_end: string
+          period_start: string
+          remarks: string | null
+          status: Database["public"]["Enums"]["approval_status"] | null
+          total_collections: number
+          total_commission: number
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          bonus_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deduction_amount?: number | null
+          final_amount?: number
+          id?: string
+          payment_date?: string | null
+          period_end: string
+          period_start: string
+          remarks?: string | null
+          status?: Database["public"]["Enums"]["approval_status"] | null
+          total_collections?: number
+          total_commission?: number
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          bonus_amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          deduction_amount?: number | null
+          final_amount?: number
+          id?: string
+          payment_date?: string | null
+          period_end?: string
+          period_start?: string
+          remarks?: string | null
+          status?: Database["public"]["Enums"]["approval_status"] | null
+          total_collections?: number
+          total_commission?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commission_approvals_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          department: string | null
+          email: string
+          employee_id: string
+          full_name: string
+          hire_date: string | null
+          id: string
+          manager_id: string | null
+          phone: string | null
+          position: string | null
+          salary: number | null
+          status: Database["public"]["Enums"]["employee_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email: string
+          employee_id: string
+          full_name: string
+          hire_date?: string | null
+          id?: string
+          manager_id?: string | null
+          phone?: string | null
+          position?: string | null
+          salary?: number | null
+          status?: Database["public"]["Enums"]["employee_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          department?: string | null
+          email?: string
+          employee_id?: string
+          full_name?: string
+          hire_date?: string | null
+          id?: string
+          manager_id?: string | null
+          phone?: string | null
+          position?: string | null
+          salary?: number | null
+          status?: Database["public"]["Enums"]["employee_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_collections: {
+        Row: {
+          agent_id: number | null
+          amount: number
+          citizen_name: string
+          citizen_phone: string | null
+          collection_date: string | null
+          commission_amount: number | null
+          commission_rate: number | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          payment_method: string | null
+          receipt_number: string | null
+          service_id: string | null
+          status: Database["public"]["Enums"]["payment_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: number | null
+          amount: number
+          citizen_name: string
+          citizen_phone?: string | null
+          collection_date?: string | null
+          commission_amount?: number | null
+          commission_rate?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          payment_method?: string | null
+          receipt_number?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["payment_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: number | null
+          amount?: number
+          citizen_name?: string
+          citizen_phone?: string | null
+          collection_date?: string | null
+          commission_amount?: number | null
+          commission_rate?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          payment_method?: string | null
+          receipt_number?: string | null
+          service_id?: string | null
+          status?: Database["public"]["Enums"]["payment_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_collections_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_collections_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      financial_transactions: {
+        Row: {
+          agent_id: number | null
+          amount: number
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          employee_id: string | null
+          id: string
+          reference_id: string | null
+          status: Database["public"]["Enums"]["payment_status"] | null
+          transaction_date: string | null
+          transaction_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: number | null
+          amount: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          employee_id?: string | null
+          id?: string
+          reference_id?: string | null
+          status?: Database["public"]["Enums"]["payment_status"] | null
+          transaction_date?: string | null
+          transaction_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: number | null
+          amount?: number
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          employee_id?: string | null
+          id?: string
+          reference_id?: string | null
+          status?: Database["public"]["Enums"]["payment_status"] | null
+          transaction_date?: string | null
+          transaction_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financial_transactions_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financial_transactions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           approved: boolean
@@ -143,6 +498,164 @@ export type Database = {
           start_date?: string | null
           state?: string | null
           status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      reimbursements: {
+        Row: {
+          agent_id: number | null
+          amount: number
+          approved_at: string | null
+          approved_by: string | null
+          category: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          employee_id: string | null
+          expense_date: string
+          id: string
+          receipt_url: string | null
+          remarks: string | null
+          status: Database["public"]["Enums"]["approval_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          agent_id?: number | null
+          amount: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          employee_id?: string | null
+          expense_date: string
+          id?: string
+          receipt_url?: string | null
+          remarks?: string | null
+          status?: Database["public"]["Enums"]["approval_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          agent_id?: number | null
+          amount?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          category?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          employee_id?: string | null
+          expense_date?: string
+          id?: string
+          receipt_url?: string | null
+          remarks?: string | null
+          status?: Database["public"]["Enums"]["approval_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reimbursements_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reimbursements_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_pricing: {
+        Row: {
+          commission_rate: number | null
+          created_at: string | null
+          created_by: string | null
+          effective_date: string | null
+          expiry_date: string | null
+          id: string
+          is_active: boolean | null
+          location_type: string | null
+          location_value: string | null
+          price: number
+          service_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          commission_rate?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_type?: string | null
+          location_value?: string | null
+          price: number
+          service_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          commission_rate?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          effective_date?: string | null
+          expiry_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          location_type?: string | null
+          location_value?: string | null
+          price?: number
+          service_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_pricing_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          base_price: number
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          service_code: string
+          service_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          base_price?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          service_code: string
+          service_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          base_price?: number
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          service_code?: string
+          service_name?: string
           updated_at?: string | null
         }
         Relationships: []
