@@ -15,9 +15,10 @@ import HRMS from './components/HRMS';
 import Settings from './components/Settings';
 import CommissionApproval from './components/CommissionApproval';
 import ApprovalWorkflow from './components/ApprovalWorkflow';
-import ServicePriceSetting from './components/ServicePriceSetting';
+import ServicePricingSetting from './components/ServicePriceSetting';
 import BankDetails from './components/BankDetails';
 import ServicePricingManagement from './components/ServicePricingManagement';
+import UserApprovalPage from './components/UserApprovalPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProjectProvider } from './contexts/ProjectContext';
@@ -112,6 +113,13 @@ function App() {
                       <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor']}>
                         <Layout>
                           <ApprovalWorkflow />
+                        </Layout>
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/user-approvals" element={
+                      <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                        <Layout>
+                          <UserApprovalPage />
                         </Layout>
                       </ProtectedRoute>
                     } />

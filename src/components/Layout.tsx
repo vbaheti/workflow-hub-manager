@@ -16,11 +16,13 @@ import {
   DollarSign,
   Building2,
   Workflow,
-  Menu
+  Menu,
+  UserCheck
 } from 'lucide-react';
 import UserProfile from './UserProfile';
 import StateSelector from './StateSelector';
 import RoleSelector from './RoleSelector';
+import ProjectSelector from './ProjectSelector';
 import { useProject } from '@/contexts/ProjectContext';
 
 const sidebarItems = [
@@ -34,6 +36,7 @@ const sidebarItems = [
   { name: 'Service Pricing', href: '/pricing', icon: DollarSign },
   { name: 'Bank Details', href: '/bank-details', icon: Building2 },
   { name: 'Approval Workflow', href: '/approvals', icon: Workflow },
+  { name: 'User Approvals', href: '/user-approvals', icon: UserCheck },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 
