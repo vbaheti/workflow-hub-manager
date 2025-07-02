@@ -25,6 +25,16 @@ import RoleSelector from './RoleSelector';
 import ProjectSelector from './ProjectSelector';
 import { useProject } from '@/contexts/ProjectContext';
 
+// Define the Project interface that matches what ProjectSelector expects
+interface Project {
+  id: string;
+  name: string;
+  status: 'active' | 'completed' | 'on-hold';
+  agentCount: number;
+  routeCount: number;
+  description: string;
+}
+
 // Define the Project interface that matches the database schema
 interface DatabaseProject {
   id: string;
@@ -60,7 +70,17 @@ interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const { selectedProject, setSelectedProject, projects } = useProject();
+  const { selectedProject, setSelectedProject, projects: dbProjects } = useProject();
+
+  // Transform database projects to match ProjectSelector interface
+  const projects: Project[] = dbProjects.map(project => ({
+    id: project.id,
+    name: project.name,
+    status: (project.status as 'active' | 'completed' | 'on-hold') || 'active',
+    agentCount: 0, // Default value since not in database
+    routeCount: 0, // Default value since not in database
+    description: project.description || ''
+  }));
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col">
@@ -77,7 +97,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <ProjectSelector 
           selectedProject={selectedProject}
           onProjectChange={setSelectedProject}
-          projects={projects as DatabaseProject[]}
+          projects={projects}
         />
         <StateSelector />
         <RoleSelector />

@@ -13,10 +13,10 @@ interface TrainingServicesProps {
 
 const TrainingServices = ({ agents }: TrainingServicesProps) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const { camps, targets, overallStats, updateTarget } = useTrainingData();
+  const { camps, targets, overallStats, handleUpdateTarget } = useTrainingData();
 
-  const handleUpdateTarget = async (targetId: string, updates: any) => {
-    await updateTarget(targetId, updates);
+  const handleUpdateTargetWrapper = async (targetId: string, updates: any) => {
+    await handleUpdateTarget(targetId, updates);
   };
 
   return (
@@ -35,7 +35,7 @@ const TrainingServices = ({ agents }: TrainingServicesProps) => {
       <TrainingTargetSetting 
         targets={targets} 
         agents={agents} 
-        onUpdateTarget={handleUpdateTarget} 
+        onUpdateTarget={handleUpdateTargetWrapper} 
       />
 
       <div className="flex gap-4 items-center">
