@@ -1,26 +1,23 @@
 
 export interface TrainingCamp {
   id: string;
-  agentId: number;
-  agentName: string;
-  trainerId: number;
-  trainerName: string;
-  campName: string;
-  location: string;
-  state: string;
-  district: string;
-  taluk: string;
-  village: string;
-  startDate: Date;
-  endDate: Date;
-  targetCitizens: number;
-  registeredCitizens: number;
-  completedCitizens: number;
-  trainingType: 'skill_development' | 'awareness' | 'capacity_building' | 'livelihood';
+  agent_id: number | null;
+  camp_name: string;
+  location: string | null;
+  start_date: string;
+  end_date: string;
+  target_citizens: number | null;
   status: 'planned' | 'ongoing' | 'completed' | 'me_pending';
-  meCompletedDate?: Date;
-  meScore?: number;
-  campFeedback?: string;
+  created_at: string | null;
+}
+
+export interface TrainingTarget {
+  id: string;
+  agent_id: number | null;
+  period: string;
+  target_camps: number | null;
+  target_citizens: number | null;
+  created_at: string | null;
 }
 
 export interface TrainingType {
@@ -38,17 +35,6 @@ export interface TrainingStats {
   targetCitizens: number;
   campsAchievementRate: number;
   citizensAchievementRate: number;
-}
-
-export interface TrainingTarget {
-  id: string;
-  agentId: number;
-  agentName: string;
-  targetCamps: number;
-  targetCitizens: number;
-  actualCamps: number;
-  actualCitizens: number;
-  period: string;
 }
 
 export const trainingTypes: TrainingType[] = [

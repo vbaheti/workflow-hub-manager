@@ -25,6 +25,19 @@ import RoleSelector from './RoleSelector';
 import ProjectSelector from './ProjectSelector';
 import { useProject } from '@/contexts/ProjectContext';
 
+// Define the Project interface that matches the database schema
+interface DatabaseProject {
+  id: string;
+  name: string;
+  description: string | null;
+  location: string | null;
+  state: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  status: string;
+  created_at: string;
+}
+
 const sidebarItems = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Service Agents', href: '/agents', icon: Users },
@@ -64,7 +77,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         <ProjectSelector 
           selectedProject={selectedProject}
           onProjectChange={setSelectedProject}
-          projects={projects}
+          projects={projects as DatabaseProject[]}
         />
         <StateSelector />
         <RoleSelector />

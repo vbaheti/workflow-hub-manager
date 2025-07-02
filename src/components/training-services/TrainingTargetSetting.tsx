@@ -13,7 +13,7 @@ import { TrainingTarget } from './TrainingServicesUtils';
 interface TrainingTargetSettingProps {
   targets: TrainingTarget[];
   agents: any[];
-  onUpdateTarget: (target: TrainingTarget) => void;
+  onUpdateTarget: (targetId: string, updates: Partial<TrainingTarget>) => void;
 }
 
 const TrainingTargetSetting = ({ targets, agents, onUpdateTarget }: TrainingTargetSettingProps) => {
@@ -27,7 +27,7 @@ const TrainingTargetSetting = ({ targets, agents, onUpdateTarget }: TrainingTarg
 
   const handleSave = () => {
     if (editForm && editingId) {
-      onUpdateTarget(editForm as TrainingTarget);
+      onUpdateTarget(editingId, editForm);
       setEditingId(null);
       setEditForm({});
     }
@@ -36,6 +36,13 @@ const TrainingTargetSetting = ({ targets, agents, onUpdateTarget }: TrainingTarg
   const handleCancel = () => {
     setEditingId(null);
     setEditForm({});
+  };
+
+  // Get agent name by ID
+  const getAgentName = (agentId: number | null) => {
+    if (!agentId) return 'Unknown Agent';
+    const agent = agents.find(a => a.id === agentId);
+    return agent ? agent.name : `Agent ${agentId}`;
   };
 
   return (
@@ -62,7 +69,7 @@ const TrainingTargetSetting = ({ targets, agents, onUpdateTarget }: TrainingTarg
             <TableBody>
               {targets.map((target) => (
                 <TableRow key={target.id}>
-                  <TableCell className="font-medium">{target.agentName}</TableCell>
+                  <TableCell className="font-medium">{getAgentName(target.agent_id)}</TableCell>
                   <TableCell>
                     {editingId === target.id ? (
                       <Input
@@ -78,35 +85,29 @@ const TrainingTargetSetting = ({ targets, agents, onUpdateTarget }: TrainingTarg
                     {editingId === target.id ? (
                       <Input
                         type="number"
-                        value={editForm.targetCamps || 0}
-                        onChange={(e) => setEditForm({ ...editForm, targetCamps: Number(e.target.value) })}
+                        value={editForm.target_camps || 0}
+                        onChange={(e) => setEditForm({ ...editForm, target_camps: Number(e.target.value) })}
                         className="w-20"
                       />
                     ) : (
-                      target.targetCamps
+                      target.target_camps || 0
                     )}
                   </TableCell>
                   <TableCell>
                     {editingId === target.id ? (
                       <Input
                         type="number"
-                        value={editForm.targetCitizens || 0}
-                        onChange={(e) => setEditForm({ ...editForm, targetCitizens: Number(e.target.value) })}
+                        value={editForm.target_citizens || 0}
+                        onChange={(e) => setEditForm({ ...editForm, target_citizens: Number(e.target.value) })}
                         className="w-20"
                       />
                     ) : (
-                      target.targetCitizens
+                      target.target_citizens || 0
                     )}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={
-                      target.actualCamps >= target.targetCamps && target.actualCitizens >= target.targetCitizens 
-                        ? "default" 
-                        : "secondary"
-                    }>
-                      {target.actualCamps >= target.targetCamps && target.actualCitizens >= target.targetCitizens 
-                        ? "Achieved" 
-                        : "In Progress"}
+                    <Badge variant="secondary">
+                      In Progress
                     </Badge>
                   </TableCell>
                   <TableCell>

@@ -22,14 +22,17 @@ const TargetVsActualAnalysis = ({ targets }: TargetVsActualAnalysisProps) => {
       <CardContent>
         <div className="space-y-6">
           {targets.map((target) => {
-            const campsAchievement = getCompletionRate(target.actualCamps, target.targetCamps);
-            const citizensAchievement = getCompletionRate(target.actualCitizens, target.targetCitizens);
+            // For now, we'll use dummy actual values since they're not in the database
+            const actualCamps = 0;
+            const actualCitizens = 0;
+            const campsAchievement = getCompletionRate(actualCamps, target.target_camps || 0);
+            const citizensAchievement = getCompletionRate(actualCitizens, target.target_citizens || 0);
             
             return (
               <div key={target.id} className="border rounded-lg p-4 space-y-4">
                 <div className="flex justify-between items-start">
                   <div>
-                    <h4 className="font-semibold">{target.agentName}</h4>
+                    <h4 className="font-semibold">Agent {target.agent_id}</h4>
                     <p className="text-sm text-muted-foreground">{target.period}</p>
                   </div>
                   <div className="text-right">
@@ -55,8 +58,8 @@ const TargetVsActualAnalysis = ({ targets }: TargetVsActualAnalysisProps) => {
                     </div>
                     <Progress value={Math.min(campsAchievement, 100)} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Actual: {target.actualCamps}</span>
-                      <span>Target: {target.targetCamps}</span>
+                      <span>Actual: {actualCamps}</span>
+                      <span>Target: {target.target_camps || 0}</span>
                     </div>
                   </div>
                   
@@ -75,8 +78,8 @@ const TargetVsActualAnalysis = ({ targets }: TargetVsActualAnalysisProps) => {
                     </div>
                     <Progress value={Math.min(citizensAchievement, 100)} className="h-2" />
                     <div className="flex justify-between text-xs text-muted-foreground">
-                      <span>Actual: {target.actualCitizens}</span>
-                      <span>Target: {target.targetCitizens}</span>
+                      <span>Actual: {actualCitizens}</span>
+                      <span>Target: {target.target_citizens || 0}</span>
                     </div>
                   </div>
                 </div>

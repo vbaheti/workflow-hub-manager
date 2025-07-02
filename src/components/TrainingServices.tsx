@@ -13,7 +13,11 @@ interface TrainingServicesProps {
 
 const TrainingServices = ({ agents }: TrainingServicesProps) => {
   const [selectedFilter, setSelectedFilter] = useState('all');
-  const { camps, targets, overallStats, handleUpdateTarget } = useTrainingData();
+  const { camps, targets, overallStats, updateTarget } = useTrainingData();
+
+  const handleUpdateTarget = async (targetId: string, updates: any) => {
+    await updateTarget(targetId, updates);
+  };
 
   return (
     <div className="space-y-6">
