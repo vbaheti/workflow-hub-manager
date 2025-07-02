@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const fetchProfile = async (userId: string) => {
     try {
+      console.log('Fetching profile for user:', userId);
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -46,43 +47,52 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
       if (error) {
         console.error('Error fetching profile:', error);
-        return;
+        // If profile doesn't exist, user might need approval
+        return null;
       }
 
-      if (data) {
-        setProfile(data);
-      }
+      console.log('Profile fetched:', data);
+      return data;
     } catch (error) {
       console.error('Error in fetchProfile:', error);
+      return null;
     }
   };
 
   useEffect(() => {
+    console.log('Setting up auth state listener');
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           // Fetch user profile when user is authenticated
-          await fetchProfile(session.user.id);
+          fetchProfile(session.user.id).then((profileData) => {
+            setProfile(profileData);
+            setLoading(false);
+          });
         } else {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        fetchProfile(session.user.id);
+        fetchProfile(session.user.id).then((profileData) => {
+          setProfile(profileData);
+          setLoading(false);
+        });
       } else {
         setLoading(false);
       }

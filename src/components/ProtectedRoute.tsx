@@ -16,6 +16,8 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { user, profile, loading } = useAuth();
 
+  console.log('ProtectedRoute - Loading:', loading, 'User:', !!user, 'Profile:', !!profile);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -25,11 +27,34 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   }
 
   if (!user) {
+    console.log('No user, redirecting to auth');
     return <Navigate to="/auth" replace />;
   }
 
+  // If user exists but no profile, they might not be in the system yet
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Card className="max-w-md">
+          <CardContent className="p-8 text-center">
+            <Clock className="h-12 w-12 mx-auto text-amber-500 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Setting up your account
+            </h2>
+            <p className="text-gray-600 mb-4">
+              Please wait while we set up your profile. If this takes too long, please contact support.
+            </p>
+            <div className="text-sm text-gray-500">
+              User: {user.email}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Check if user is approved
-  if (profile && !profile.approved) {
+  if (!profile.approved) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="max-w-md">
@@ -50,7 +75,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  if (requiredRoles.length > 0 && profile && !requiredRoles.includes(profile.role)) {
+  if (requiredRoles.length > 0 && !requiredRoles.includes(profile.role)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -61,6 +86,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
+  console.log('ProtectedRoute - Rendering children');
   return <>{children}</>;
 };
 
