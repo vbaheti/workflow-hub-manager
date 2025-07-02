@@ -2,7 +2,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { Role, Permission, User } from '../types/rbac';
 import { ROLE_HIERARCHY, ROLE_PERMISSIONS } from '../config/roles';
-import { useDefaultValues } from './DefaultValuesContext';
 
 interface RBACContextType {
   currentUser: User | null;
@@ -21,14 +20,12 @@ interface RBACProviderProps {
 }
 
 export const RBACProvider = ({ children, initialUser }: RBACProviderProps) => {
-  const { defaultRole } = useDefaultValues();
-  
   const [currentUser, setCurrentUser] = useState<User | null>(
     initialUser || {
       id: '1',
       name: 'John Doe',
       email: 'john@example.com',
-      role: defaultRole as Role,
+      role: 'viewer' as Role,
       projectId: 'project-alpha'
     }
   );

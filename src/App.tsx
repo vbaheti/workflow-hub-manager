@@ -33,8 +33,8 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <RBACProvider>
-          <DefaultValuesProvider>
+        <DefaultValuesProvider>
+          <RBACProvider>
             <ProjectProvider>
               <StateProvider>
                 <ApprovalProvider>
@@ -138,8 +138,8 @@ function App() {
                 </ApprovalProvider>
               </StateProvider>
             </ProjectProvider>
-          </DefaultValuesProvider>
-        </RBACProvider>
+          </RBACProvider>
+        </DefaultValuesProvider>
       </AuthProvider>
       <Toaster />
     </QueryClientProvider>
