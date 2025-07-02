@@ -1,6 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { useProjects } from '@/hooks/useProjects';
+import { useDefaultValues } from './DefaultValuesContext';
 
 interface Project {
   id: string;
@@ -25,7 +26,8 @@ interface ProjectProviderProps {
 }
 
 export const ProjectProvider = ({ children }: ProjectProviderProps) => {
-  const [selectedProject, setSelectedProject] = useState('');
+  const { defaultProject } = useDefaultValues();
+  const [selectedProject, setSelectedProject] = useState(defaultProject);
   const { projects: dbProjects, loading } = useProjects();
 
   // Transform database projects to match the interface
@@ -38,12 +40,14 @@ export const ProjectProvider = ({ children }: ProjectProviderProps) => {
     description: project.description || ''
   }));
 
-  // Set the first project as selected when projects load
+  // Set the default project when projects load
   useEffect(() => {
     if (projects.length > 0 && !selectedProject) {
-      setSelectedProject(projects[0].id);
+      // Try to find the default project, otherwise use the first one
+      const defaultProjectExists = projects.find(p => p.id === defaultProject);
+      setSelectedProject(defaultProjectExists ? defaultProject : projects[0].id);
     }
-  }, [projects, selectedProject]);
+  }, [projects, selectedProject, defaultProject]);
 
   const currentProject = projects.find(p => p.id === selectedProject);
 

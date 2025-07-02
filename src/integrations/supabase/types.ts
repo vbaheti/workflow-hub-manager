@@ -11,106 +11,37 @@ export type Database = {
     Tables: {
       agents: {
         Row: {
-          area: string | null
-          assigned_routes: string[] | null
           created_at: string | null
-          created_by: string | null
           district: string | null
           email: string
           id: number
           location: string | null
           name: string
-          performance_score: number | null
           phone: string | null
-          services_completed: number | null
           state: string | null
           status: string | null
-          total_collections: number | null
-          updated_at: string | null
         }
         Insert: {
-          area?: string | null
-          assigned_routes?: string[] | null
           created_at?: string | null
-          created_by?: string | null
           district?: string | null
           email: string
           id?: number
           location?: string | null
           name: string
-          performance_score?: number | null
           phone?: string | null
-          services_completed?: number | null
           state?: string | null
           status?: string | null
-          total_collections?: number | null
-          updated_at?: string | null
         }
         Update: {
-          area?: string | null
-          assigned_routes?: string[] | null
           created_at?: string | null
-          created_by?: string | null
           district?: string | null
           email?: string
           id?: number
           location?: string | null
           name?: string
-          performance_score?: number | null
           phone?: string | null
-          services_completed?: number | null
           state?: string | null
           status?: string | null
-          total_collections?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
-      approval_workflows: {
-        Row: {
-          approved_by: string[] | null
-          created_at: string | null
-          current_approver: string | null
-          current_step: number | null
-          entity_id: string
-          id: string
-          rejected_by: string | null
-          rejection_reason: string | null
-          requested_by: string | null
-          status: Database["public"]["Enums"]["approval_status"] | null
-          total_steps: number | null
-          updated_at: string | null
-          workflow_type: string
-        }
-        Insert: {
-          approved_by?: string[] | null
-          created_at?: string | null
-          current_approver?: string | null
-          current_step?: number | null
-          entity_id: string
-          id?: string
-          rejected_by?: string | null
-          rejection_reason?: string | null
-          requested_by?: string | null
-          status?: Database["public"]["Enums"]["approval_status"] | null
-          total_steps?: number | null
-          updated_at?: string | null
-          workflow_type: string
-        }
-        Update: {
-          approved_by?: string[] | null
-          created_at?: string | null
-          current_approver?: string | null
-          current_step?: number | null
-          entity_id?: string
-          id?: string
-          rejected_by?: string | null
-          rejection_reason?: string | null
-          requested_by?: string | null
-          status?: Database["public"]["Enums"]["approval_status"] | null
-          total_steps?: number | null
-          updated_at?: string | null
-          workflow_type?: string
         }
         Relationships: []
       }
@@ -118,110 +49,71 @@ export type Database = {
         Row: {
           account_holder_name: string
           account_number: string
-          account_type: string | null
           bank_name: string
-          branch_name: string | null
           created_at: string | null
-          created_by: string | null
           entity_id: string
           entity_type: string
           id: string
           ifsc_code: string
           is_primary: boolean | null
-          is_verified: boolean | null
-          updated_at: string | null
         }
         Insert: {
           account_holder_name: string
           account_number: string
-          account_type?: string | null
           bank_name: string
-          branch_name?: string | null
           created_at?: string | null
-          created_by?: string | null
           entity_id: string
           entity_type: string
           id?: string
           ifsc_code: string
           is_primary?: boolean | null
-          is_verified?: boolean | null
-          updated_at?: string | null
         }
         Update: {
           account_holder_name?: string
           account_number?: string
-          account_type?: string | null
           bank_name?: string
-          branch_name?: string | null
           created_at?: string | null
-          created_by?: string | null
           entity_id?: string
           entity_type?: string
           id?: string
           ifsc_code?: string
           is_primary?: boolean | null
-          is_verified?: boolean | null
-          updated_at?: string | null
         }
         Relationships: []
       }
       commission_approvals: {
         Row: {
           agent_id: number | null
-          approved_at: string | null
           approved_by: string | null
-          bonus_amount: number | null
           created_at: string | null
-          created_by: string | null
-          deduction_amount: number | null
           final_amount: number
           id: string
-          payment_date: string | null
           period_end: string
           period_start: string
-          remarks: string | null
           status: Database["public"]["Enums"]["approval_status"] | null
-          total_collections: number
           total_commission: number
-          updated_at: string | null
         }
         Insert: {
           agent_id?: number | null
-          approved_at?: string | null
           approved_by?: string | null
-          bonus_amount?: number | null
           created_at?: string | null
-          created_by?: string | null
-          deduction_amount?: number | null
-          final_amount?: number
+          final_amount: number
           id?: string
-          payment_date?: string | null
           period_end: string
           period_start: string
-          remarks?: string | null
           status?: Database["public"]["Enums"]["approval_status"] | null
-          total_collections?: number
-          total_commission?: number
-          updated_at?: string | null
+          total_commission: number
         }
         Update: {
           agent_id?: number | null
-          approved_at?: string | null
           approved_by?: string | null
-          bonus_amount?: number | null
           created_at?: string | null
-          created_by?: string | null
-          deduction_amount?: number | null
           final_amount?: number
           id?: string
-          payment_date?: string | null
           period_end?: string
           period_start?: string
-          remarks?: string | null
           status?: Database["public"]["Enums"]["approval_status"] | null
-          total_collections?: number
           total_commission?: number
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -231,56 +123,57 @@ export type Database = {
             referencedRelation: "agents"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "commission_approvals_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       employees: {
         Row: {
           created_at: string | null
-          created_by: string | null
           department: string | null
+          designation: string | null
           email: string
-          employee_id: string
+          employee_code: string
           full_name: string
-          hire_date: string | null
           id: string
+          joining_date: string | null
           manager_id: string | null
           phone: string | null
-          position: string | null
-          salary: number | null
           status: Database["public"]["Enums"]["employee_status"] | null
-          updated_at: string | null
+          user_id: string | null
         }
         Insert: {
           created_at?: string | null
-          created_by?: string | null
           department?: string | null
+          designation?: string | null
           email: string
-          employee_id: string
+          employee_code: string
           full_name: string
-          hire_date?: string | null
           id?: string
+          joining_date?: string | null
           manager_id?: string | null
           phone?: string | null
-          position?: string | null
-          salary?: number | null
           status?: Database["public"]["Enums"]["employee_status"] | null
-          updated_at?: string | null
+          user_id?: string | null
         }
         Update: {
           created_at?: string | null
-          created_by?: string | null
           department?: string | null
+          designation?: string | null
           email?: string
-          employee_id?: string
+          employee_code?: string
           full_name?: string
-          hire_date?: string | null
           id?: string
+          joining_date?: string | null
           manager_id?: string | null
           phone?: string | null
-          position?: string | null
-          salary?: number | null
           status?: Database["public"]["Enums"]["employee_status"] | null
-          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -297,52 +190,37 @@ export type Database = {
           agent_id: number | null
           amount: number
           citizen_name: string
-          citizen_phone: string | null
           collection_date: string | null
           commission_amount: number | null
-          commission_rate: number | null
           created_at: string | null
-          created_by: string | null
           id: string
-          payment_method: string | null
           receipt_number: string | null
           service_id: string | null
           status: Database["public"]["Enums"]["payment_status"] | null
-          updated_at: string | null
         }
         Insert: {
           agent_id?: number | null
           amount: number
           citizen_name: string
-          citizen_phone?: string | null
           collection_date?: string | null
           commission_amount?: number | null
-          commission_rate?: number | null
           created_at?: string | null
-          created_by?: string | null
           id?: string
-          payment_method?: string | null
           receipt_number?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
-          updated_at?: string | null
         }
         Update: {
           agent_id?: number | null
           amount?: number
           citizen_name?: string
-          citizen_phone?: string | null
           collection_date?: string | null
           commission_amount?: number | null
-          commission_rate?: number | null
           created_at?: string | null
-          created_by?: string | null
           id?: string
-          payment_method?: string | null
           receipt_number?: string | null
           service_id?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -366,43 +244,34 @@ export type Database = {
           agent_id: number | null
           amount: number
           created_at: string | null
-          created_by: string | null
           description: string | null
           employee_id: string | null
           id: string
-          reference_id: string | null
           status: Database["public"]["Enums"]["payment_status"] | null
           transaction_date: string | null
           transaction_type: string
-          updated_at: string | null
         }
         Insert: {
           agent_id?: number | null
           amount: number
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
           employee_id?: string | null
           id?: string
-          reference_id?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
           transaction_date?: string | null
           transaction_type: string
-          updated_at?: string | null
         }
         Update: {
           agent_id?: number | null
           amount?: number
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
           employee_id?: string | null
           id?: string
-          reference_id?: string | null
           status?: Database["public"]["Enums"]["payment_status"] | null
           transaction_date?: string | null
           transaction_type?: string
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -428,8 +297,6 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
-          partner_id: string | null
-          project_id: string | null
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string | null
         }
@@ -439,8 +306,6 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
-          partner_id?: string | null
-          project_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -450,8 +315,6 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
-          partner_id?: string | null
-          project_id?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string | null
         }
@@ -459,107 +322,80 @@ export type Database = {
       }
       projects: {
         Row: {
-          agent_count: number | null
           created_at: string | null
           description: string | null
           end_date: string | null
           id: string
           location: string | null
           name: string
-          route_count: number | null
           start_date: string | null
           state: string | null
           status: string | null
-          updated_at: string | null
         }
         Insert: {
-          agent_count?: number | null
           created_at?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           location?: string | null
           name: string
-          route_count?: number | null
           start_date?: string | null
           state?: string | null
           status?: string | null
-          updated_at?: string | null
         }
         Update: {
-          agent_count?: number | null
           created_at?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           location?: string | null
           name?: string
-          route_count?: number | null
           start_date?: string | null
           state?: string | null
           status?: string | null
-          updated_at?: string | null
         }
         Relationships: []
       }
       reimbursements: {
         Row: {
-          agent_id: number | null
           amount: number
-          approved_at: string | null
           approved_by: string | null
           category: string
           created_at: string | null
-          created_by: string | null
           description: string | null
           employee_id: string | null
           expense_date: string
           id: string
-          receipt_url: string | null
-          remarks: string | null
           status: Database["public"]["Enums"]["approval_status"] | null
-          updated_at: string | null
         }
         Insert: {
-          agent_id?: number | null
           amount: number
-          approved_at?: string | null
           approved_by?: string | null
           category: string
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
           employee_id?: string | null
           expense_date: string
           id?: string
-          receipt_url?: string | null
-          remarks?: string | null
           status?: Database["public"]["Enums"]["approval_status"] | null
-          updated_at?: string | null
         }
         Update: {
-          agent_id?: number | null
           amount?: number
-          approved_at?: string | null
           approved_by?: string | null
           category?: string
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
           employee_id?: string | null
           expense_date?: string
           id?: string
-          receipt_url?: string | null
-          remarks?: string | null
           status?: Database["public"]["Enums"]["approval_status"] | null
-          updated_at?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "reimbursements_agent_id_fkey"
-            columns: ["agent_id"]
+            foreignKeyName: "reimbursements_approved_by_fkey"
+            columns: ["approved_by"]
             isOneToOne: false
-            referencedRelation: "agents"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -571,58 +407,20 @@ export type Database = {
           },
         ]
       }
-      service_pricing: {
+      roles: {
         Row: {
-          commission_rate: number | null
-          created_at: string | null
-          created_by: string | null
-          effective_date: string | null
-          expiry_date: string | null
-          id: string
-          is_active: boolean | null
-          location_type: string | null
-          location_value: string | null
-          price: number
-          service_id: string | null
-          updated_at: string | null
+          id: number
+          name: string
         }
         Insert: {
-          commission_rate?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          effective_date?: string | null
-          expiry_date?: string | null
-          id?: string
-          is_active?: boolean | null
-          location_type?: string | null
-          location_value?: string | null
-          price: number
-          service_id?: string | null
-          updated_at?: string | null
+          id?: number
+          name: string
         }
         Update: {
-          commission_rate?: number | null
-          created_at?: string | null
-          created_by?: string | null
-          effective_date?: string | null
-          expiry_date?: string | null
-          id?: string
-          is_active?: boolean | null
-          location_type?: string | null
-          location_value?: string | null
-          price?: number
-          service_id?: string | null
-          updated_at?: string | null
+          id?: number
+          name?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "service_pricing_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       services: {
         Row: {
@@ -634,7 +432,6 @@ export type Database = {
           is_active: boolean | null
           service_code: string
           service_name: string
-          updated_at: string | null
         }
         Insert: {
           base_price?: number
@@ -645,7 +442,6 @@ export type Database = {
           is_active?: boolean | null
           service_code: string
           service_name: string
-          updated_at?: string | null
         }
         Update: {
           base_price?: number
@@ -656,85 +452,42 @@ export type Database = {
           is_active?: boolean | null
           service_code?: string
           service_name?: string
-          updated_at?: string | null
         }
         Relationships: []
       }
       training_camps: {
         Row: {
           agent_id: number | null
-          agent_name: string
-          camp_feedback: string | null
           camp_name: string
-          completed_citizens: number | null
           created_at: string | null
-          district: string | null
           end_date: string
           id: string
           location: string | null
-          me_completed_date: string | null
-          me_score: number | null
-          registered_citizens: number | null
           start_date: string
-          state: string | null
           status: Database["public"]["Enums"]["training_status"] | null
-          taluk: string | null
           target_citizens: number | null
-          trainer_id: number | null
-          trainer_name: string | null
-          training_type: Database["public"]["Enums"]["training_type"] | null
-          updated_at: string | null
-          village: string | null
         }
         Insert: {
           agent_id?: number | null
-          agent_name: string
-          camp_feedback?: string | null
           camp_name: string
-          completed_citizens?: number | null
           created_at?: string | null
-          district?: string | null
           end_date: string
           id?: string
           location?: string | null
-          me_completed_date?: string | null
-          me_score?: number | null
-          registered_citizens?: number | null
           start_date: string
-          state?: string | null
           status?: Database["public"]["Enums"]["training_status"] | null
-          taluk?: string | null
           target_citizens?: number | null
-          trainer_id?: number | null
-          trainer_name?: string | null
-          training_type?: Database["public"]["Enums"]["training_type"] | null
-          updated_at?: string | null
-          village?: string | null
         }
         Update: {
           agent_id?: number | null
-          agent_name?: string
-          camp_feedback?: string | null
           camp_name?: string
-          completed_citizens?: number | null
           created_at?: string | null
-          district?: string | null
           end_date?: string
           id?: string
           location?: string | null
-          me_completed_date?: string | null
-          me_score?: number | null
-          registered_citizens?: number | null
           start_date?: string
-          state?: string | null
           status?: Database["public"]["Enums"]["training_status"] | null
-          taluk?: string | null
           target_citizens?: number | null
-          trainer_id?: number | null
-          trainer_name?: string | null
-          training_type?: Database["public"]["Enums"]["training_type"] | null
-          updated_at?: string | null
-          village?: string | null
         }
         Relationships: [
           {
@@ -748,40 +501,28 @@ export type Database = {
       }
       training_targets: {
         Row: {
-          actual_camps: number | null
-          actual_citizens: number | null
           agent_id: number | null
-          agent_name: string
           created_at: string | null
           id: string
           period: string
           target_camps: number | null
           target_citizens: number | null
-          updated_at: string | null
         }
         Insert: {
-          actual_camps?: number | null
-          actual_citizens?: number | null
           agent_id?: number | null
-          agent_name: string
           created_at?: string | null
           id?: string
           period: string
           target_camps?: number | null
           target_citizens?: number | null
-          updated_at?: string | null
         }
         Update: {
-          actual_camps?: number | null
-          actual_citizens?: number | null
           agent_id?: number | null
-          agent_name?: string
           created_at?: string | null
           id?: string
           period?: string
           target_camps?: number | null
           target_citizens?: number | null
-          updated_at?: string | null
         }
         Relationships: [
           {
@@ -792,6 +533,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_roles: {
+        Row: {
+          role_id: number
+          user_id: string
+        }
+        Insert: {
+          role_id: number
+          user_id: string
+        }
+        Update: {
+          role_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      users: {
+        Row: {
+          id: string
+        }
+        Insert: {
+          id: string
+        }
+        Update: {
+          id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
