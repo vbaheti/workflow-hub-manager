@@ -7,9 +7,12 @@ interface Project {
   id: string;
   name: string;
   status: 'active' | 'completed' | 'on-hold';
-  agentCount: number;
-  routeCount: number;
   description: string;
+  location: string | null;
+  state: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
 }
 
 interface ProjectContextType {
@@ -34,10 +37,13 @@ export const ProjectProvider = ({ children }: ProjectProviderProps) => {
   const projects: Project[] = dbProjects.map(project => ({
     id: project.id,
     name: project.name,
-    status: project.status as 'active' | 'completed' | 'on-hold',
-    agentCount: project.agent_count,
-    routeCount: project.route_count,
-    description: project.description || ''
+    status: (project.status as 'active' | 'completed' | 'on-hold') || 'active',
+    description: project.description || '',
+    location: project.location,
+    state: project.state,
+    start_date: project.start_date,
+    end_date: project.end_date,
+    created_at: project.created_at
   }));
 
   // Set the default project when projects load

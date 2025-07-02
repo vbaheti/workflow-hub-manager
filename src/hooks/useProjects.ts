@@ -11,10 +11,7 @@ interface Project {
   start_date: string | null;
   end_date: string | null;
   status: string;
-  agent_count: number;
-  route_count: number;
   created_at: string;
-  updated_at: string;
 }
 
 export const useProjects = () => {

@@ -8,9 +8,9 @@ interface Profile {
   email: string;
   full_name: string | null;
   role: 'super_admin' | 'admin' | 'manager' | 'supervisor' | 'agent' | 'viewer' | 'partner_admin';
-  project_id: string | null;
-  partner_id: string | null;
   approved: boolean;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 interface AuthContextType {

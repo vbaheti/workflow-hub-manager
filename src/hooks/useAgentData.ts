@@ -22,18 +22,16 @@ const useAgentData = () => {
     if (!currentProject) return allAgents;
 
     return allAgents.filter(agent => {
-      const routeMatch = selectedStates.length === 0
+      const stateMatch = selectedStates.length === 0
         ? true
-        : agent.assigned_routes?.some((r: string) =>
-            selectedStates.some((state) => r.toLowerCase().includes(state.toLowerCase()))
-          );
+        : selectedStates.some(state => agent.state?.toLowerCase().includes(state.toLowerCase()));
       
       const projectStates = getProjectStates(currentProject.name);
       const mappedState = selectedStates.length === 0
         ? true
         : selectedStates.some((s) => projectStates.includes(s));
       
-      return routeMatch || mappedState;
+      return stateMatch || mappedState;
     });
   }, [currentProject, selectedStates, allAgents]);
 

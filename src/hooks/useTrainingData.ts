@@ -1,136 +1,95 @@
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { TrainingCamp, TrainingTarget, TrainingStats, getCompletionRate } from '@/components/training-services/TrainingServicesUtils';
+
+interface TrainingCamp {
+  id: string;
+  agent_id: number | null;
+  camp_name: string;
+  location: string | null;
+  start_date: string;
+  end_date: string;
+  target_citizens: number | null;
+  status: 'planned' | 'ongoing' | 'completed' | 'me_pending';
+  created_at: string | null;
+}
+
+interface TrainingTarget {
+  id: string;
+  agent_id: number | null;
+  target_camps: number | null;
+  target_citizens: number | null;
+  period: string;
+  created_at: string | null;
+}
+
+interface TrainingStats {
+  totalCamps: number;
+  completedCamps: number;
+  totalCitizensServed: number;
+  avgCompletionRate: number;
+  targetCamps: number;
+  targetCitizens: number;
+  campsAchievementRate: number;
+  citizensAchievementRate: number;
+}
 
 export const useTrainingData = () => {
   const [camps, setCamps] = useState<TrainingCamp[]>([]);
   const [targets, setTargets] = useState<TrainingTarget[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchTrainingCamps = async () => {
+  const fetchTrainingData = async () => {
     try {
-      const { data, error } = await supabase
-        .from('training_camps')
-        .select('*')
-        .order('start_date', { ascending: false });
+      setLoading(true);
+      
+      const [campsResult, targetsResult] = await Promise.all([
+        supabase.from('training_camps').select('*').order('start_date', { ascending: false }),
+        supabase.from('training_targets').select('*').order('created_at', { ascending: false })
+      ]);
 
-      if (error) throw error;
+      if (campsResult.error) throw campsResult.error;
+      if (targetsResult.error) throw targetsResult.error;
 
-      const formattedCamps: TrainingCamp[] = (data || []).map(camp => ({
-        id: String(camp.id),
-        agentId: camp.agent_id || 0,
-        agentName: camp.agent_name || '',
-        trainerId: camp.trainer_id || 0,
-        trainerName: camp.trainer_name || '',
-        campName: camp.camp_name || '',
-        location: camp.location || '',
-        state: camp.state || '',
-        district: camp.district || '',
-        taluk: camp.taluk || '',
-        village: camp.village || '',
-        startDate: new Date(camp.start_date),
-        endDate: new Date(camp.end_date),
-        targetCitizens: camp.target_citizens || 0,
-        registeredCitizens: camp.registered_citizens || 0,
-        completedCitizens: camp.completed_citizens || 0,
-        trainingType: camp.training_type as any || 'skill_development',
-        status: camp.status as any || 'planned',
-        meCompletedDate: camp.me_completed_date ? new Date(camp.me_completed_date) : undefined,
-        meScore: camp.me_score || undefined,
-        campFeedback: camp.camp_feedback || undefined
-      }));
-
-      setCamps(formattedCamps);
-    } catch (error: any) {
-      console.error('Error fetching training camps:', error);
-      setError(error.message);
-    }
-  };
-
-  const fetchTrainingTargets = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('training_targets')
-        .select('*')
-        .order('period');
-
-      if (error) throw error;
-
-      const formattedTargets: TrainingTarget[] = (data || []).map(target => ({
-        id: String(target.id),
-        agentId: target.agent_id || 0,
-        agentName: target.agent_name || '',
-        targetCamps: target.target_camps || 0,
-        targetCitizens: target.target_citizens || 0,
-        actualCamps: target.actual_camps || 0,
-        actualCitizens: target.actual_citizens || 0,
-        period: target.period || ''
-      }));
-
-      setTargets(formattedTargets);
-    } catch (error: any) {
-      console.error('Error fetching training targets:', error);
-      setError(error.message);
+      setCamps(campsResult.data || []);
+      setTargets(targetsResult.data || []);
+    } catch (error) {
+      console.error('Error fetching training data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      await Promise.all([fetchTrainingCamps(), fetchTrainingTargets()]);
-      setLoading(false);
-    };
-
-    fetchData();
+    fetchTrainingData();
   }, []);
 
-  const overallStats = useMemo((): TrainingStats => {
-    const totalCamps = camps.length;
-    const completedCamps = camps.filter(c => c.status === 'completed').length;
-    const totalCitizensServed = camps.reduce((sum, c) => sum + c.completedCitizens, 0);
-    const avgCompletionRate = camps.length > 0 
-      ? camps.reduce((sum, c) => sum + getCompletionRate(c.completedCitizens, c.targetCitizens), 0) / camps.length 
-      : 0;
-
-    const targetCamps = targets.reduce((sum, t) => sum + t.targetCamps, 0);
-    const targetCitizens = targets.reduce((sum, t) => sum + t.targetCitizens, 0);
-    const campsAchievementRate = targetCamps > 0 ? (totalCamps / targetCamps) * 100 : 0;
-    const citizensAchievementRate = targetCitizens > 0 ? (totalCitizensServed / targetCitizens) * 100 : 0;
-
-    return { 
-      totalCamps, 
-      completedCamps, 
-      totalCitizensServed, 
-      avgCompletionRate,
-      targetCamps,
-      targetCitizens,
-      campsAchievementRate,
-      citizensAchievementRate
-    };
-  }, [camps, targets]);
-
-  const handleUpdateTarget = async (updatedTarget: TrainingTarget) => {
+  const handleUpdateTarget = async (targetId: string, updates: Partial<TrainingTarget>) => {
     try {
       const { error } = await supabase
         .from('training_targets')
-        .update({
-          target_camps: updatedTarget.targetCamps,
-          target_citizens: updatedTarget.targetCitizens,
-          actual_camps: updatedTarget.actualCamps,
-          actual_citizens: updatedTarget.actualCitizens
-        })
-        .eq('id', updatedTarget.id);
+        .update(updates)
+        .eq('id', targetId);
 
       if (error) throw error;
 
       setTargets(prev => prev.map(target => 
-        target.id === updatedTarget.id ? updatedTarget : target
+        target.id === targetId ? { ...target, ...updates } : target
       ));
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error updating target:', error);
     }
+  };
+
+  const overallStats: TrainingStats = {
+    totalCamps: camps.length,
+    completedCamps: camps.filter(camp => camp.status === 'completed').length,
+    totalCitizensServed: camps.reduce((sum, camp) => sum + (camp.target_citizens || 0), 0),
+    avgCompletionRate: camps.length > 0 ? (camps.filter(camp => camp.status === 'completed').length / camps.length) * 100 : 0,
+    targetCamps: targets.reduce((sum, target) => sum + (target.target_camps || 0), 0),
+    targetCitizens: targets.reduce((sum, target) => sum + (target.target_citizens || 0), 0),
+    campsAchievementRate: 0, // Will be calculated based on actual vs target
+    citizensAchievementRate: 0 // Will be calculated based on actual vs target
   };
 
   return {
@@ -138,11 +97,7 @@ export const useTrainingData = () => {
     targets,
     overallStats,
     loading,
-    error,
     handleUpdateTarget,
-    refetch: () => {
-      fetchTrainingCamps();
-      fetchTrainingTargets();
-    }
+    refetch: fetchTrainingData
   };
 };

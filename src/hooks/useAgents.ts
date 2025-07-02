@@ -10,14 +10,8 @@ interface Agent {
   location: string | null;
   state: string | null;
   district: string | null;
-  area: string | null;
   status: string;
-  performance_score: number;
-  total_collections: number;
-  services_completed: number;
-  assigned_routes: string[];
-  created_at: string;
-  updated_at: string;
+  created_at: string | null;
 }
 
 export const useAgents = () => {
@@ -48,7 +42,7 @@ export const useAgents = () => {
     fetchAgents();
   }, []);
 
-  const addAgent = async (agentData: Omit<Agent, 'id' | 'created_at' | 'updated_at'>) => {
+  const addAgent = async (agentData: Omit<Agent, 'id' | 'created_at'>) => {
     try {
       const { data, error } = await supabase
         .from('agents')
