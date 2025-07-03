@@ -1,12 +1,14 @@
 
 import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Route, BarChart3, Truck } from 'lucide-react';
+import { Users, Route, BarChart3, Truck, Target, Brain } from 'lucide-react';
 import { useRBAC } from '../contexts/RBACContext';
 import ServiceAgentsManagement from './ServiceAgentsManagement';
 import ServiceAgentsAssignment from './ServiceAgentsAssignment';
 import ServiceAgentsTracking from './ServiceAgentsTracking';
 import ServiceAgentsAnalytics from './ServiceAgentsAnalytics';
+import TargetManagement from './TargetManagement';
+import AegisInsights from './AegisInsights';
 
 interface ServiceAgentsTabsProps {
   filteredAgents: any[];
@@ -35,7 +37,7 @@ const ServiceAgentsTabs: React.FC<ServiceAgentsTabsProps> = ({
 
   return (
     <Tabs defaultValue="agents" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-6">
         <TabsTrigger value="agents" className="flex items-center gap-2">
           <Users className="h-4 w-4" />
           Agents
@@ -43,13 +45,13 @@ const ServiceAgentsTabs: React.FC<ServiceAgentsTabsProps> = ({
         {hasPermission('assign_routes') && (
           <TabsTrigger value="assignment" className="flex items-center gap-2">
             <Route className="h-4 w-4" />
-            Assignment & Training
+            Assignment
           </TabsTrigger>
         )}
         {hasPermission('track_services') && (
           <TabsTrigger value="delivery" className="flex items-center gap-2">
             <Truck className="h-4 w-4" />
-            Service Tracking
+            Tracking
           </TabsTrigger>
         )}
         {hasPermission('view_analytics') && (
@@ -58,6 +60,14 @@ const ServiceAgentsTabs: React.FC<ServiceAgentsTabsProps> = ({
             Analytics
           </TabsTrigger>
         )}
+        <TabsTrigger value="targets" className="flex items-center gap-2">
+          <Target className="h-4 w-4" />
+          Targets
+        </TabsTrigger>
+        <TabsTrigger value="insights" className="flex items-center gap-2">
+          <Brain className="h-4 w-4" />
+          AI Insights
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="agents">
@@ -94,6 +104,14 @@ const ServiceAgentsTabs: React.FC<ServiceAgentsTabsProps> = ({
           />
         </TabsContent>
       )}
+
+      <TabsContent value="targets">
+        <TargetManagement />
+      </TabsContent>
+
+      <TabsContent value="insights">
+        <AegisInsights />
+      </TabsContent>
     </Tabs>
   );
 };
