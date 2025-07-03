@@ -1,13 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, Calendar, DollarSign, Users, MapPin } from 'lucide-react';
 import { useProjects } from '@/hooks/useProjects';
+import CreateProjectModal from '@/components/CreateProjectModal';
+import ProjectDetailsModal from '@/components/ProjectDetailsModal';
 
 const ProjectsPage = () => {
-  const { projects, loading } = useProjects();
+  const { projects, loading, refetch } = useProjects();
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<any>(null);
+
+  const handleViewDetails = (project: any) => {
+    setSelectedProject(project);
+    setShowDetailsModal(true);
+  };
+
+  const handleCreateSuccess = () => {
+    refetch();
+  };
 
   if (loading) {
     return (
@@ -24,11 +38,23 @@ const ProjectsPage = () => {
           <h1 className="text-3xl font-bold">Projects</h1>
           <p className="text-muted-foreground">Manage all your projects and their progress</p>
         </div>
-        <Button>
+        <Button onClick={() => setShowCreateModal(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Project
         </Button>
       </div>
+
+      <CreateProjectModal
+        open={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSuccess={handleCreateSuccess}
+      />
+
+      <ProjectDetailsModal
+        open={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        project={selectedProject}
+      />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {projects.map((project) => (
@@ -69,10 +95,17 @@ const ProjectsPage = () => {
               )}
 
               <div className="flex justify-between pt-4">
-                <Button variant="outline" size="sm">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleViewDetails(project)}
+                >
                   View Details
                 </Button>
-                <Button size="sm">
+                <Button 
+                  size="sm"
+                  onClick={() => handleViewDetails(project)}
+                >
                   Manage
                 </Button>
               </div>
@@ -86,7 +119,7 @@ const ProjectsPage = () => {
           <CardContent>
             <h3 className="text-lg font-semibold mb-2">No Projects Found</h3>
             <p className="text-muted-foreground mb-4">Get started by creating your first project</p>
-            <Button>
+            <Button onClick={() => setShowCreateModal(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Project
             </Button>

@@ -39,28 +39,27 @@ export const useTargets = (projectId?: string) => {
   const fetchTargets = async () => {
     try {
       setLoading(true);
-      setError(null);
-
-      // Use raw SQL query since the table isn't in the generated types yet
-      let query = supabase.rpc('exec_sql', {
-        sql: projectId 
-          ? `SELECT * FROM targets WHERE project_id = '${projectId}' ORDER BY created_at DESC`
-          : 'SELECT * FROM targets ORDER BY created_at DESC'
-      });
-
-      const { data, error: fetchError } = await query;
-
-      if (fetchError) {
-        console.error('Error fetching targets:', fetchError);
-        setError(fetchError.message);
-        return;
+      let query = supabase
+        .from('targets' as any)
+        .select('*');
+      
+      if (projectId) {
+        query = query.eq('project_id', projectId);
       }
-
-      // Since we can't use the generated types, we'll work with the raw data
-      setTargets(data || []);
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching targets:', error);
+        setError(error.message);
+        setTargets([]);
+      } else {
+        setTargets(data || []);
+      }
     } catch (err) {
       console.error('Error in fetchTargets:', err);
       setError('Failed to fetch targets');
+      setTargets([]);
     } finally {
       setLoading(false);
     }
@@ -68,86 +67,66 @@ export const useTargets = (projectId?: string) => {
 
   const createTarget = async (targetData: CreateTargetData) => {
     try {
-      // Use raw SQL for insert since the table isn't in generated types
-      const { data, error: createError } = await supabase.rpc('exec_sql', {
-        sql: `
-          INSERT INTO targets (
-            name, project_id, metric_type, target_value, current_progress,
-            assigned_to_id, parent_target_id, period_start, period_end, status
-          ) VALUES (
-            '${targetData.name}',
-            '${targetData.project_id}',
-            '${targetData.metric_type}',
-            ${targetData.target_value},
-            ${targetData.current_progress},
-            '${targetData.assigned_to_id}',
-            ${targetData.parent_target_id ? `'${targetData.parent_target_id}'` : 'NULL'},
-            '${targetData.period_start}',
-            '${targetData.period_end}',
-            '${targetData.status}'
-          ) RETURNING *;
-        `
-      });
+      const { data, error } = await supabase
+        .from('targets' as any)
+        .insert([targetData])
+        .select()
+        .single();
 
-      if (createError) {
-        console.error('Error creating target:', createError);
-        return { data: null, error: createError };
+      if (error) {
+        console.error('Error creating target:', error);
+        return { data: null, error };
       }
 
-      // Refresh the targets list
-      await fetchTargets();
-      
-      return { data: data?.[0] || null, error: null };
+      setTargets(prev => [...prev, data]);
+      return { data, error: null };
     } catch (err) {
       console.error('Error in createTarget:', err);
       return { data: null, error: err };
     }
   };
 
-  const updateTarget = async (targetId: string, updates: Partial<CreateTargetData>) => {
+  const updateTarget = async (id: string, updates: Partial<Target>) => {
     try {
-      // Build UPDATE query dynamically
-      const updateFields = Object.entries(updates)
-        .map(([key, value]) => {
-          if (typeof value === 'string') {
-            return `${key} = '${value}'`;
-          } else if (typeof value === 'number') {
-            return `${key} = ${value}`;
-          } else if (value === null) {
-            return `${key} = NULL`;
-          }
-          return '';
-        })
-        .filter(Boolean)
-        .join(', ');
+      const { data, error } = await supabase
+        .from('targets' as any)
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
 
-      if (!updateFields) {
-        return { data: null, error: new Error('No valid updates provided') };
+      if (error) {
+        console.error('Error updating target:', error);
+        return { data: null, error };
       }
 
-      const { data, error: updateError } = await supabase.rpc('exec_sql', {
-        sql: `
-          UPDATE targets 
-          SET ${updateFields}, updated_at = NOW()
-          WHERE id = '${targetId}'
-          RETURNING *;
-        `
-      });
-
-      if (updateError) {
-        console.error('Error updating target:', updateError);
-        return { data: null, error: updateError };
-      }
-
-      // Update local state
       setTargets(prev => prev.map(target => 
-        target.id === targetId ? { ...target, ...updates } : target
+        target.id === id ? { ...target, ...data } : target
       ));
-
-      return { data: data?.[0] || null, error: null };
+      return { data, error: null };
     } catch (err) {
       console.error('Error in updateTarget:', err);
       return { data: null, error: err };
+    }
+  };
+
+  const deleteTarget = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('targets' as any)
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting target:', error);
+        return { error };
+      }
+
+      setTargets(prev => prev.filter(target => target.id !== id));
+      return { error: null };
+    } catch (err) {
+      console.error('Error in deleteTarget:', err);
+      return { error: err };
     }
   };
 
@@ -161,6 +140,7 @@ export const useTargets = (projectId?: string) => {
     error,
     createTarget,
     updateTarget,
+    deleteTarget,
     refetch: fetchTargets
   };
 };

@@ -2,17 +2,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-interface Project {
+export interface Project {
   id: string;
   name: string;
-  description: string | null;
-  location: string | null;
-  state: string | null;
-  start_date: string | null;
-  end_date: string | null;
-  status: string;
-  budget: number | null;
-  created_at: string;
+  description?: string;
+  location?: string;
+  state?: string;
+  budget?: number;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+  created_at?: string;
+  project_lead_id?: string;
+  vertical_id?: string;
 }
 
 export const useProjects = () => {
@@ -26,14 +28,19 @@ export const useProjects = () => {
       const { data, error } = await supabase
         .from('projects')
         .select('*')
-        .order('name');
+        .order('created_at', { ascending: false });
 
-      if (error) throw error;
-
-      setProjects(data || []);
-    } catch (error: any) {
-      console.error('Error fetching projects:', error);
-      setError(error.message);
+      if (error) {
+        console.error('Error fetching projects:', error);
+        setError(error.message);
+        setProjects([]);
+      } else {
+        setProjects(data || []);
+      }
+    } catch (err) {
+      console.error('Error in fetchProjects:', err);
+      setError('Failed to fetch projects');
+      setProjects([]);
     } finally {
       setLoading(false);
     }
