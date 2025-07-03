@@ -8,6 +8,10 @@ import Auth from './pages/Auth';
 import NotFound from './pages/NotFound';
 import Dashboard from './components/Dashboard';
 import AgentsPage from './pages/AgentsPage';
+import ProjectsPage from './pages/ProjectsPage';
+import ServiceDeliveryPage from './pages/ServiceDeliveryPage';
+import TrainingPage from './pages/TrainingPage';
+import FinancialHubPage from './pages/FinancialHubPage';
 import FeeCollection from './components/FeeCollection';
 import FinancialTransactions from './components/FinancialTransactions';
 import Reimbursements from './components/Reimbursements';
@@ -15,9 +19,8 @@ import HRMS from './components/HRMS';
 import SettingsPage from './pages/SettingsPage';
 import CommissionApproval from './components/CommissionApproval';
 import ApprovalWorkflow from './components/ApprovalWorkflow';
-import ServicePricingSetting from './components/ServicePriceSetting';
-import BankDetails from './components/BankDetails';
 import ServicePricingManagement from './components/ServicePricingManagement';
+import BankDetails from './components/BankDetails';
 import UserApprovalPage from './components/UserApprovalPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './contexts/AuthContext';
@@ -55,6 +58,15 @@ function App() {
                           </Layout>
                         </ProtectedRoute>
                       } />
+                      
+                      {/* Operations Routes */}
+                      <Route path="/projects" element={
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
+                          <Layout>
+                            <ProjectsPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
                       <Route path="/agents" element={
                         <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor', 'agent']}>
                           <Layout>
@@ -62,27 +74,52 @@ function App() {
                           </Layout>
                         </ProtectedRoute>
                       } />
-                      <Route path="/fees" element={
+                      <Route path="/service-delivery" element={
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor', 'agent']}>
+                          <Layout>
+                            <ServiceDeliveryPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/training" element={
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor']}>
+                          <Layout>
+                            <TrainingPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+
+                      {/* Finance Routes */}
+                      <Route path="/financial-hub" element={
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
+                          <Layout>
+                            <FinancialHubPage />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/revenue" element={
                         <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor', 'agent']}>
                           <Layout>
                             <FeeCollection />
                           </Layout>
                         </ProtectedRoute>
                       } />
-                      <Route path="/transactions" element={
+                      <Route path="/expenses" element={
                         <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager', 'supervisor']}>
-                          <Layout>
-                            <FinancialTransactions />
-                          </Layout>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/reimbursements" element={
-                        <ProtectedRoute>
                           <Layout>
                             <Reimbursements />
                           </Layout>
                         </ProtectedRoute>
                       } />
+                      <Route path="/pnl-reports" element={
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
+                          <Layout>
+                            <FinancialTransactions />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+
+                      {/* HR Routes */}
                       <Route path="/hrms" element={
                         <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
                           <Layout>
@@ -90,24 +127,26 @@ function App() {
                           </Layout>
                         </ProtectedRoute>
                       } />
-                      <Route path="/commissions" element={
+                      <Route path="/payroll" element={
                         <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
                           <Layout>
                             <CommissionApproval />
                           </Layout>
                         </ProtectedRoute>
                       } />
-                      <Route path="/pricing" element={
-                        <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
-                          <Layout>
-                            <ServicePricingManagement />
-                          </Layout>
-                        </ProtectedRoute>
-                      } />
-                      <Route path="/bank-details" element={
+                      <Route path="/bank-assets" element={
                         <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
                           <Layout>
                             <BankDetails />
+                          </Layout>
+                        </ProtectedRoute>
+                      } />
+
+                      {/* System Administration Routes */}
+                      <Route path="/user-approvals" element={
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                          <Layout>
+                            <UserApprovalPage />
                           </Layout>
                         </ProtectedRoute>
                       } />
@@ -118,20 +157,21 @@ function App() {
                           </Layout>
                         </ProtectedRoute>
                       } />
-                      <Route path="/user-approvals" element={
-                        <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                      <Route path="/pricing" element={
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin', 'manager']}>
                           <Layout>
-                            <UserApprovalPage />
+                            <ServicePricingManagement />
                           </Layout>
                         </ProtectedRoute>
                       } />
                       <Route path="/settings" element={
-                        <ProtectedRoute>
+                        <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                           <Layout>
                             <SettingsPage />
                           </Layout>
                         </ProtectedRoute>
                       } />
+
                       <Route path="*" element={<NotFound />} />
                     </Routes>
                   </Router>

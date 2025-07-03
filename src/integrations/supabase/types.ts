@@ -45,6 +45,53 @@ export type Database = {
         }
         Relationships: []
       }
+      assets: {
+        Row: {
+          agent_id: number | null
+          asset_name: string
+          asset_type: string
+          created_at: string
+          id: string
+          purchase_amount: number | null
+          purchase_date: string | null
+          serial_number: string | null
+          status: string | null
+          warranty_expiry: string | null
+        }
+        Insert: {
+          agent_id?: number | null
+          asset_name: string
+          asset_type: string
+          created_at?: string
+          id?: string
+          purchase_amount?: number | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          warranty_expiry?: string | null
+        }
+        Update: {
+          agent_id?: number | null
+          asset_name?: string
+          asset_type?: string
+          created_at?: string
+          id?: string
+          purchase_amount?: number | null
+          purchase_date?: string | null
+          serial_number?: string | null
+          status?: string | null
+          warranty_expiry?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_details: {
         Row: {
           account_holder_name: string
@@ -181,6 +228,90 @@ export type Database = {
             columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      expenses: {
+        Row: {
+          agent_id: number | null
+          amount: number
+          approved_by: string | null
+          category: string
+          created_at: string
+          description: string | null
+          employee_id: string | null
+          expense_date: string
+          id: string
+          project_id: string | null
+          receipt_url: string | null
+          status: string | null
+          vertical_id: string | null
+        }
+        Insert: {
+          agent_id?: number | null
+          amount: number
+          approved_by?: string | null
+          category: string
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          expense_date?: string
+          id?: string
+          project_id?: string | null
+          receipt_url?: string | null
+          status?: string | null
+          vertical_id?: string | null
+        }
+        Update: {
+          agent_id?: number | null
+          amount?: number
+          approved_by?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          employee_id?: string | null
+          expense_date?: string
+          id?: string
+          project_id?: string | null
+          receipt_url?: string | null
+          status?: string | null
+          vertical_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "agents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
             referencedColumns: ["id"]
           },
         ]
@@ -322,39 +453,63 @@ export type Database = {
       }
       projects: {
         Row: {
+          budget: number | null
           created_at: string | null
           description: string | null
           end_date: string | null
           id: string
           location: string | null
           name: string
+          project_lead_id: string | null
           start_date: string | null
           state: string | null
           status: string | null
+          vertical_id: string | null
         }
         Insert: {
+          budget?: number | null
           created_at?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           location?: string | null
           name: string
+          project_lead_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
+          vertical_id?: string | null
         }
         Update: {
+          budget?: number | null
           created_at?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           location?: string | null
           name?: string
+          project_lead_id?: string | null
           start_date?: string | null
           state?: string | null
           status?: string | null
+          vertical_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "projects_project_lead_id_fkey"
+            columns: ["project_lead_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reimbursements: {
         Row: {
@@ -432,6 +587,7 @@ export type Database = {
           is_active: boolean | null
           service_code: string
           service_name: string
+          vertical_id: string | null
         }
         Insert: {
           base_price?: number
@@ -442,6 +598,7 @@ export type Database = {
           is_active?: boolean | null
           service_code: string
           service_name: string
+          vertical_id?: string | null
         }
         Update: {
           base_price?: number
@@ -452,6 +609,42 @@ export type Database = {
           is_active?: boolean | null
           service_code?: string
           service_name?: string
+          vertical_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_vertical_id_fkey"
+            columns: ["vertical_id"]
+            isOneToOne: false
+            referencedRelation: "verticals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: Json
         }
         Relationships: []
       }
@@ -573,6 +766,33 @@ export type Database = {
         }
         Update: {
           id?: string
+        }
+        Relationships: []
+      }
+      verticals: {
+        Row: {
+          color_code: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+        }
+        Insert: {
+          color_code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+        }
+        Update: {
+          color_code?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
         }
         Relationships: []
       }
