@@ -11,27 +11,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Target, TrendingUp, Users, Calendar, Plus } from 'lucide-react';
 import { useTargets } from '@/hooks/useTargets';
 import { useProject } from '@/contexts/ProjectContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 const TargetManagement = () => {
   const { currentProject } = useProject();
-  const { targets, loading, createTarget } = useTargets(currentProject?.id);
+  const { profile } = useAuth();
+  const { targets, loading, createTarget, error } = useTargets(currentProject?.id);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     metric_type: 'revenue' as const,
     target_value: 0,
     period_start: '',
-    period_end: '',
-    assigned_to_id: ''
+    period_end: ''
   });
 
   const handleCreateTarget = async () => {
-    if (!currentProject) return;
+    if (!currentProject || !profile) return;
 
     const result = await createTarget({
       ...formData,
       project_id: currentProject.id,
       current_progress: 0,
+      assigned_to_id: profile.id,
       parent_target_id: null,
       status: 'active'
     });
@@ -43,8 +45,7 @@ const TargetManagement = () => {
         metric_type: 'revenue',
         target_value: 0,
         period_start: '',
-        period_end: '',
-        assigned_to_id: ''
+        period_end: ''
       });
     }
   };
@@ -69,11 +70,15 @@ const TargetManagement = () => {
       'on_hold': 'bg-yellow-100 text-yellow-800',
       cancelled: 'bg-red-100 text-red-800'
     };
-    return <Badge className={variants[status as keyof typeof variants]}>{status}</Badge>;
+    return <Badge className={variants[status as keyof typeof variants] || 'bg-gray-100 text-gray-800'}>{status}</Badge>;
   };
 
   if (loading) {
     return <div className="p-6">Loading targets...</div>;
+  }
+
+  if (error) {
+    return <div className="p-6 text-red-600">Error loading targets: {error}</div>;
   }
 
   return (
@@ -223,66 +228,72 @@ const TargetManagement = () => {
           <CardTitle>Targets Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Target Name</TableHead>
-                <TableHead>Metric</TableHead>
-                <TableHead>Progress</TableHead>
-                <TableHead>Period</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {targets.map((target) => (
-                <TableRow key={target.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      {getMetricIcon(target.metric_type)}
-                      <span className="font-medium">{target.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className="capitalize">
-                      {target.metric_type.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span>{target.current_progress.toLocaleString()}</span>
-                        <span>{target.target_value.toLocaleString()}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${Math.min((target.current_progress / target.target_value) * 100, 100)}%` }}
-                        ></div>
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {Math.round((target.current_progress / target.target_value) * 100)}% complete
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <div>{new Date(target.period_start).toLocaleDateString()}</div>
-                      <div className="text-muted-foreground">to {new Date(target.period_end).toLocaleDateString()}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {getStatusBadge(target.status)}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      Split Target
-                    </Button>
-                  </TableCell>
+          {targets.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No targets found. Create your first target to get started.
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Target Name</TableHead>
+                  <TableHead>Metric</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Period</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {targets.map((target) => (
+                  <TableRow key={target.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        {getMetricIcon(target.metric_type)}
+                        <span className="font-medium">{target.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {target.metric_type.replace('_', ' ')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span>{target.current_progress.toLocaleString()}</span>
+                          <span>{target.target_value.toLocaleString()}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div 
+                            className="bg-blue-600 h-2 rounded-full" 
+                            style={{ width: `${Math.min((target.current_progress / target.target_value) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          {Math.round((target.current_progress / target.target_value) * 100)}% complete
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <div>{new Date(target.period_start).toLocaleDateString()}</div>
+                        <div className="text-muted-foreground">to {new Date(target.period_end).toLocaleDateString()}</div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {getStatusBadge(target.status)}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm">
+                        Split Target
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
