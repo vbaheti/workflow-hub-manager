@@ -5,8 +5,11 @@ import RouteAssignment from '@/components/RouteAssignment';
 import ServiceDeliveryTracking from '@/components/ServiceDeliveryTracking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MapPin, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useAgents } from '@/hooks/useAgents';
 
 const ServiceDeliveryPage = () => {
+  const { agents } = useAgents();
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -73,7 +76,7 @@ const ServiceDeliveryPage = () => {
         </TabsContent>
 
         <TabsContent value="routes">
-          <RouteAssignment />
+          <RouteAssignment agents={agents} />
         </TabsContent>
 
         <TabsContent value="tracking">

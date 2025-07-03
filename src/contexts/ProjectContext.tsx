@@ -12,6 +12,7 @@ interface Project {
   state: string | null;
   start_date: string | null;
   end_date: string | null;
+  budget: number | null;
   created_at: string;
 }
 
@@ -43,6 +44,7 @@ export const ProjectProvider = ({ children }: ProjectProviderProps) => {
     state: project.state,
     start_date: project.start_date,
     end_date: project.end_date,
+    budget: project.budget,
     created_at: project.created_at
   }));
 

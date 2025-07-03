@@ -11,6 +11,7 @@ interface Project {
   start_date: string | null;
   end_date: string | null;
   status: string;
+  budget: number | null;
   created_at: string;
 }
 
