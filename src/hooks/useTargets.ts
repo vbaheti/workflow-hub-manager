@@ -1,35 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 
-export interface Target {
-  id: string;
-  name: string;
-  project_id: string | null;
-  metric_type: 'revenue' | 'services_completed' | 'fee_collection' | 'training_camps' | 'citizens_trained';
-  target_value: number;
-  current_progress: number;
-  assigned_to_id: string;
-  parent_target_id: string | null;
-  period_start: string;
-  period_end: string;
-  status: 'active' | 'completed' | 'on_hold' | 'cancelled';
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateTargetData {
-  name: string;
-  project_id: string;
-  metric_type: 'revenue' | 'services_completed' | 'fee_collection' | 'training_camps' | 'citizens_trained';
-  target_value: number;
-  current_progress: number;
-  assigned_to_id: string;
-  parent_target_id: string | null;
-  period_start: string;
-  period_end: string;
-  status: 'active' | 'completed' | 'on_hold' | 'cancelled';
-}
+type Target = Database['public']['Tables']['targets']['Row'];
+type CreateTargetData = Database['public']['Tables']['targets']['Insert'];
 
 export const useTargets = (projectId?: string) => {
   const [targets, setTargets] = useState<Target[]>([]);
@@ -40,7 +15,7 @@ export const useTargets = (projectId?: string) => {
     try {
       setLoading(true);
       let query = supabase
-        .from('targets' as any)
+        .from('targets')
         .select('*');
       
       if (projectId) {
@@ -68,7 +43,7 @@ export const useTargets = (projectId?: string) => {
   const createTarget = async (targetData: CreateTargetData) => {
     try {
       const { data, error } = await supabase
-        .from('targets' as any)
+        .from('targets')
         .insert([targetData])
         .select()
         .single();
@@ -78,7 +53,9 @@ export const useTargets = (projectId?: string) => {
         return { data: null, error };
       }
 
-      setTargets(prev => [...prev, data]);
+      if (data) {
+        setTargets(prev => [...prev, data]);
+      }
       return { data, error: null };
     } catch (err) {
       console.error('Error in createTarget:', err);
@@ -89,7 +66,7 @@ export const useTargets = (projectId?: string) => {
   const updateTarget = async (id: string, updates: Partial<Target>) => {
     try {
       const { data, error } = await supabase
-        .from('targets' as any)
+        .from('targets')
         .update(updates)
         .eq('id', id)
         .select()
@@ -100,9 +77,11 @@ export const useTargets = (projectId?: string) => {
         return { data: null, error };
       }
 
-      setTargets(prev => prev.map(target => 
-        target.id === id ? { ...target, ...data } : target
-      ));
+      if (data) {
+        setTargets(prev => prev.map(target => 
+          target.id === id ? data : target
+        ));
+      }
       return { data, error: null };
     } catch (err) {
       console.error('Error in updateTarget:', err);
@@ -113,7 +92,7 @@ export const useTargets = (projectId?: string) => {
   const deleteTarget = async (id: string) => {
     try {
       const { error } = await supabase
-        .from('targets' as any)
+        .from('targets')
         .delete()
         .eq('id', id);
 
